@@ -329,7 +329,17 @@ export async function createProject(options: CreateProjectOptions): Promise<stri
   }
 
   if (installDependencies) {
-    runCommand("npm", ["install"], destination, "npm install");
+    try {
+      runCommand("npm", ["install"], destination, "npm install");
+    } catch (error) {
+      throw new Error(
+        `${error instanceof Error ? error.message : error}\n\n` +
+          `The derived project at ${destination} is incomplete (dependencies were not installed).\n` +
+          `If npm reported EALLOWSCRIPTS, your global npm config restricts lifecycle scripts; retry with a neutral config, e.g.:\n` +
+          `  npm_config_userconfig=/dev/null npm run generate:project -- ${packageName} --profile ${profile} --install --destination ${destination} --force\n` +
+          `Otherwise fix the reported npm error and retry with --force to replace the partial destination.`,
+      );
+    }
   }
 
   if (profile === "minimal") {
