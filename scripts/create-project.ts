@@ -1,6 +1,7 @@
 import { booleanFlag, parseArgs, printUsage, stringFlag } from "./_lib/cli.js";
 import { ensureRepositoryRoot, pathExists, readJson, writeJson } from "./_lib/files.js";
 import { assertKebabCase, titleCase } from "./_lib/naming.js";
+import { resolveTsrBinary } from "./_lib/routes.js";
 import { renderTemplate } from "./_lib/templates.js";
 import { generateAiContext } from "./generate-ai-context.js";
 import { spawnSync } from "node:child_process";
@@ -12,6 +13,7 @@ interface PackageJson {
   name?: string;
   version?: string;
   private?: boolean;
+  scripts?: Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -54,15 +56,74 @@ async function copyRepository(sourceRoot: string, destination: string): Promise<
   });
 }
 
+const DERIVED_SOURCE_ONLY_SCRIPT_PATTERN = /^\s*"(generate:project|phase1:self-test)"\s*:/;
+
 async function updatePackageIdentity(destination: string, packageName: string): Promise<{ sourceVersion: string }> {
   const packagePath = path.join(destination, "package.json");
-  const packageJson = await readJson<PackageJson>(packagePath);
-  const sourceVersion = packageJson.version ?? "unknown";
+  const raw = await readFile(packagePath, "utf8");
+  let packageJson: PackageJson;
+  try {
+    packageJson = JSON.parse(raw) as PackageJson;
+  } catch (error) {
+    throw new Error(`Failed to parse JSON at ${packagePath}: ${error instanceof Error ? error.message : error}`);
+  }
+  const sourceVersion = (packageJson.version as string | undefined) ?? "unknown";
 
-  packageJson.name = packageName;
-  packageJson.version = "0.1.0";
-  packageJson.private = true;
-  await writeJson(packagePath, packageJson);
+  // Format-preserving text edits: a JSON round-trip would reflow arrays such as
+  // lint-staged and break `npm run check` (biome) in the derived project.
+  let replacedName = false;
+  let replacedVersion = false;
+  let replacedPrivate = false;
+  const kept: string[] = [];
+  for (const line of raw.split("\n")) {
+    if (!replacedName && /^\s*"name"\s*:/.test(line)) {
+      kept.push(line.replace(/:\s*"[^"]*"/, `: "${packageName}"`));
+      replacedName = true;
+      continue;
+    }
+    if (!replacedVersion && /^\s*"version"\s*:/.test(line)) {
+      kept.push(line.replace(/:\s*"[^"]*"/, ': "0.1.0"'));
+      replacedVersion = true;
+      continue;
+    }
+    if (!replacedPrivate && /^\s*"private"\s*:/.test(line)) {
+      kept.push(line.replace(/:\s*\w+/, ": true"));
+      replacedPrivate = true;
+      continue;
+    }
+    if (DERIVED_SOURCE_ONLY_SCRIPT_PATTERN.test(line)) {
+      continue;
+    }
+    kept.push(line);
+  }
+
+  // Repair a trailing comma only if dropping a script line orphaned one.
+  // Valid JSON input contains no `,}` sequence, so any match is our breakage.
+  const text = kept.join("\n").replace(/,(\s*})/g, "$1");
+
+  let parsed: PackageJson;
+  try {
+    parsed = JSON.parse(text) as PackageJson;
+  } catch {
+    // Fall back to a semantic rewrite if the source layout ever defeats the
+    // surgical edit; formatting drift is preferable to invalid JSON.
+    packageJson.name = packageName;
+    packageJson.version = "0.1.0";
+    packageJson.private = true;
+    const scripts = packageJson.scripts;
+    if (scripts) {
+      for (const scriptName of DERIVED_SOURCE_ONLY_SCRIPTS) {
+        delete scripts[scriptName];
+      }
+    }
+    await writeJson(packagePath, packageJson);
+    return { sourceVersion };
+  }
+
+  if (parsed.name !== packageName || parsed.version !== "0.1.0") {
+    throw new Error("Derived package identity was not updated correctly.");
+  }
+  await writeFile(packagePath, text.endsWith("\n") ? text : `${text}\n`, "utf8");
 
   const lockPath = path.join(destination, "package-lock.json");
   if (await pathExists(lockPath)) {
@@ -115,7 +176,7 @@ interface MinimalProfileConfig {
   removeStandaloneDirectories?: string[];
 }
 
-async function applyMinimalProfile(repositoryRoot: string, destination: string): Promise<void> {
+async function applyMinimalProfile(destination: string): Promise<void> {
   const configPath = path.join(destination, "templates", "project", "minimal-profile.json");
   const config = await readJson<MinimalProfileConfig>(configPath);
   const dashboardRoot = path.join(destination, "src", "routes", "(main)", "dashboard");
@@ -142,36 +203,68 @@ async function applyMinimalProfile(repositoryRoot: string, destination: string):
     "utf8",
   );
   await writeFile(path.join(destination, "docs", "ai", "canonical-examples.yaml"), canonicalTemplate, "utf8");
-
-  await regenerateRouteTree(repositoryRoot, destination);
 }
 
-async function regenerateRouteTree(repositoryRoot: string, destination: string): Promise<void> {
-  const binaryName = process.platform === "win32" ? "tsr.cmd" : "tsr";
-  const tsrBinary = path.join(repositoryRoot, "node_modules", ".bin", binaryName);
+async function regenerateMinimalRouteTree(repositoryRoot: string, destination: string): Promise<void> {
+  const tsrBinary = await resolveTsrBinary(repositoryRoot, destination);
 
-  if (!(await pathExists(tsrBinary))) {
-    console.warn(
-      "TanStack Router CLI not found; skipping route tree regeneration." +
-        " Run `npm run generate-routes` in the derived project after installing dependencies.",
+  if (!tsrBinary) {
+    throw new Error(
+      "Unable to regenerate TanStack Router route tree for the minimal profile: " +
+        "TanStack Router CLI (tsr) not found in the destination or the boilerplate source. " +
+        "Use --install or install the boilerplate dependencies before generating the project.",
     );
-    return;
   }
 
   const result = spawnSync(tsrBinary, ["generate"], { cwd: destination, encoding: "utf8" });
 
   if (result.status !== 0) {
-    console.warn(
-      "Route tree regeneration failed;" +
-        " run `npm run generate-routes` in the derived project after installing dependencies.",
+    const details = typeof result.stderr === "string" && result.stderr.trim() ? `: ${result.stderr.trim()}` : ".";
+    throw new Error(
+      "Unable to regenerate TanStack Router route tree for the minimal profile" +
+        `${details} Fix the route tree with \`npm run generate-routes\` after installing dependencies.`,
     );
-    if (typeof result.stderr === "string" && result.stderr.trim()) {
-      console.warn(result.stderr.trim());
-    }
-    return;
   }
 
   console.log("Regenerated src/routeTree.gen.ts for the minimal profile.");
+}
+
+const DERIVED_SOURCE_ONLY_FILES = [
+  path.join("scripts", "create-project.ts"),
+  path.join("scripts", "self-test.ts"),
+  path.join("templates", "project"),
+  "INSTALL.es.md",
+  "MANIFEST.md",
+  "PROJECT.template.md",
+];
+
+const DERIVED_SOURCE_ONLY_SCRIPTS = ["generate:project", "phase1:self-test"];
+
+async function removeDerivedProjectMapCapability(destination: string): Promise<void> {
+  const projectMapPath = path.join(destination, "docs", "ai", "project-map.yaml");
+  if (!(await pathExists(projectMapPath))) {
+    return;
+  }
+
+  const content = await readFile(projectMapPath, "utf8");
+  const filtered = content
+    .split("\n")
+    .filter((line) => !/^\s*generateProject:/.test(line))
+    .join("\n");
+
+  if (filtered !== content) {
+    await writeFile(projectMapPath, filtered, "utf8");
+  }
+}
+
+async function applyDerivedProjectCleanup(destination: string): Promise<void> {
+  for (const relative of DERIVED_SOURCE_ONLY_FILES) {
+    await rm(path.join(destination, relative), { recursive: true, force: true });
+  }
+
+  // Source-only package.json scripts are dropped by updatePackageIdentity with
+  // format-preserving text edits; no JSON round-trip happens here.
+  await removeDerivedProjectMapCapability(destination);
 }
 
 function runCommand(command: string, args: string[], cwd: string, label: string): void {
@@ -232,14 +325,20 @@ export async function createProject(options: CreateProjectOptions): Promise<stri
   });
 
   if (profile === "minimal") {
-    await applyMinimalProfile(repositoryRoot, destination);
+    await applyMinimalProfile(destination);
   }
-
-  await generateAiContext({ repositoryRoot: destination });
 
   if (installDependencies) {
     runCommand("npm", ["install"], destination, "npm install");
   }
+
+  if (profile === "minimal") {
+    await regenerateMinimalRouteTree(repositoryRoot, destination);
+  }
+
+  await applyDerivedProjectCleanup(destination);
+
+  await generateAiContext({ repositoryRoot: destination });
 
   if (initializeGit) {
     await rm(path.join(destination, ".git"), { recursive: true, force: true });
@@ -264,9 +363,14 @@ async function main(): Promise<void> {
       "  --title <text>",
       "  --description <text>",
       "  --profile <full|minimal>",
-      "  --install",
+      "  --install (recommended with --profile minimal: installs destination",
+      "    dependencies first so the TanStack Router CLI can regenerate the route tree)",
       "  --git-init",
       "  --force",
+      "",
+      "The derived project keeps feature, dashboard, CRUD, validator, and AI context",
+      "tooling, but never generate:project. A minimal project without a resolvable",
+      "TanStack Router CLI fails instead of shipping a stale src/routeTree.gen.ts.",
     ]);
     return;
   }

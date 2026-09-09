@@ -1,4 +1,5 @@
-import { walkFiles } from "./files.js";
+import { pathExists, walkFiles } from "./files.js";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 
 function normalizeSlash(value: string): string {
@@ -167,6 +168,56 @@ export function routeMatchesUrl(route: string, rawUrl: string): boolean {
 
 export function isExternalUrl(url: string): boolean {
   return /^(https?:|mailto:|tel:|#)/.test(url);
+}
+
+/**
+ * Resolve the TanStack Router CLI, preferring the destination installation
+ * over the boilerplate source so a clean clone with `--install` works.
+ */
+export async function resolveTsrBinary(repositoryRoot: string, destination: string): Promise<string | null> {
+  const binaryName = process.platform === "win32" ? "tsr.cmd" : "tsr";
+  const candidates = [
+    path.join(destination, "node_modules", ".bin", binaryName),
+    path.join(repositoryRoot, "node_modules", ".bin", binaryName),
+  ];
+
+  for (const candidate of candidates) {
+    if (await pathExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Regenerate `src/routeTree.gen.ts` after scaffolding new routes. Lenient by
+ * design: fixtures and clean checkouts without installed dependencies skip
+ * with guidance instead of failing the generator.
+ */
+export async function regenerateRouteTree(repositoryRoot: string): Promise<boolean> {
+  const tsrBinary = await resolveTsrBinary(repositoryRoot, repositoryRoot);
+
+  if (!tsrBinary) {
+    console.warn(
+      "TanStack Router CLI not found; skipping route tree regeneration." +
+        " Run `npm run generate-routes` after installing dependencies.",
+    );
+    return false;
+  }
+
+  const result = spawnSync(tsrBinary, ["generate"], { cwd: repositoryRoot, encoding: "utf8" });
+
+  if (result.status !== 0) {
+    console.warn("Route tree regeneration failed; run `npm run generate-routes` manually.");
+    if (typeof result.stderr === "string" && result.stderr.trim()) {
+      console.warn(result.stderr.trim());
+    }
+    return false;
+  }
+
+  console.log("Regenerated src/routeTree.gen.ts.");
+  return true;
 }
 
 export function extractNavigationUrls(source: string): string[] {
