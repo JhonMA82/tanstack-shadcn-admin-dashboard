@@ -2,6 +2,7 @@ import { booleanFlag, parseArgs, printUsage, stringFlag } from "./_lib/cli.js";
 import { ensureRepositoryRoot } from "./_lib/files.js";
 import { assertKebabCase, pascalCase, titleCase } from "./_lib/naming.js";
 import { addNavigationItem } from "./_lib/navigation.js";
+import { regenerateRouteTree } from "./_lib/routes.js";
 import { renderTemplateTree } from "./_lib/templates.js";
 import { generateAiContext } from "./generate-ai-context.js";
 import path from "node:path";
@@ -55,6 +56,8 @@ export async function createDashboard(options: CreateDashboardOptions): Promise<
       group: "Dashboards",
     });
   }
+
+  await regenerateRouteTree(repositoryRoot);
 
   if (refreshContext) {
     await generateAiContext({ repositoryRoot });

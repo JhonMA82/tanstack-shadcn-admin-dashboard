@@ -145,18 +145,23 @@ export async function addNavigationItem(repositoryRoot: string, input: Navigatio
 
   const arrayEnd = findMatchingBracket(source, arrayStart);
   const indentation = "      ";
-  const snippet = [
-    "",
+  const entry = [
     `${indentation}{`,
     `${indentation}  id: "${input.id}",`,
     `${indentation}  title: "${input.title}",`,
     `${indentation}  url: "${input.url}" as AppPath,`,
     `${indentation}  icon: ${input.icon},`,
     `${indentation}},`,
-    "    ",
   ].join("\n");
 
-  source = `${source.slice(0, arrayEnd)}${snippet}${source.slice(arrayEnd)}`;
+  let insertAt = arrayEnd;
+  while (insertAt > arrayStart && /\s/.test(source[insertAt - 1] ?? "")) {
+    insertAt -= 1;
+  }
+  const isEmptyArray = insertAt === arrayStart + 1;
+  const snippet = isEmptyArray ? `\n${entry}\n    ` : `\n${entry}`;
+
+  source = `${source.slice(0, insertAt)}${snippet}${source.slice(insertAt)}`;
   await writeFile(navigationPath, source, "utf8");
   return true;
 }
