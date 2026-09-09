@@ -1,7 +1,6 @@
 import { booleanFlag, parseArgs, printUsage } from "./_lib/cli.js";
 import { ensureRepositoryRoot, listDirectories, pathExists, readJson, walkFiles } from "./_lib/files.js";
 import { extractNavigationUrls, scanRoutes } from "./_lib/routes.js";
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,15 +36,6 @@ function bulletList(values: string[], empty = "_None found._"): string {
   }
 
   return values.map((value) => `- \`${value}\``).join("\n");
-}
-
-function gitCommit(root: string): string {
-  const result = spawnSync("git", ["rev-parse", "--short", "HEAD"], {
-    cwd: root,
-    encoding: "utf8",
-  });
-
-  return result.status === 0 ? result.stdout.trim() : "unavailable";
 }
 
 function detectProjectStatus(content: string | null): string {
@@ -170,9 +160,11 @@ export async function buildAiContext(repositoryRoot: string): Promise<string> {
     scripts,
     templateFiles,
     projectStatus: detectProjectStatus(projectContent),
-    gitCommit: gitCommit(repositoryRoot),
   };
 
+  // The digest covers repository content only: volatile git state is
+  // excluded so a committed context stays current after new commits.
+  // Commit provenance lives in git history (and .boilerplate.json downstream).
   const digest = createHash("sha256").update(JSON.stringify(snapshot)).digest("hex").slice(0, 16);
 
   const dependencyLines = Object.entries(snapshot.package.dependencies).map(([name, version]) => `${name}: ${version}`);
@@ -188,7 +180,6 @@ export async function buildAiContext(repositoryRoot: string): Promise<string> {
 
 - Package: \`${snapshot.package.name}\`
 - Version: \`${snapshot.package.version}\`
-- Git commit: \`${snapshot.gitCommit}\`
 - Project contract: \`${snapshot.projectStatus}\`
 - shadcn style: \`${snapshot.shadcn.style}\`
 - SSR-first (no RSC): \`true\`
