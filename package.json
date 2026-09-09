@@ -1,5 +1,6 @@
 {
   "name": "tanstack-shadcn-admin-dashboard",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "imports": {
@@ -15,7 +16,18 @@
     "check": "biome check",
     "check:fix": "biome check --write",
     "prepare": "husky",
-    "generate:presets": "ts-node -P tsconfig.scripts.json src/scripts/generate-theme-presets.ts"
+    "generate:presets": "bun src/scripts/generate-theme-presets.ts",
+    "generate:project": "bun scripts/create-project.ts",
+    "generate:feature": "bun scripts/create-feature.ts",
+    "generate:crud": "bun scripts/create-crud.ts",
+    "generate:dashboard": "bun scripts/create-dashboard.ts",
+    "ai:context": "bun scripts/generate-ai-context.ts",
+    "ai:context:check": "bun scripts/generate-ai-context.ts --check",
+    "validate:architecture": "bun scripts/validate-architecture.ts",
+    "validate:navigation": "bun scripts/validate-navigation.ts",
+    "phase1:self-test": "bun scripts/self-test.ts",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run check && npm run typecheck && npm run validate:architecture && npm run validate:navigation && npm run ai:context:check && npm run build"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": ["biome check --write --no-errors-on-unmatched"]

@@ -25,13 +25,16 @@ import { Route as mainDashboardComingSoonRouteRouteImport } from './routes/(main
 import { Route as mainDashboardCrmRouteRouteImport } from './routes/(main)/dashboard/crm/route'
 import { Route as mainDashboardDefaultRouteRouteImport } from './routes/(main)/dashboard/default/route'
 import { Route as mainDashboardEcommerceRouteRouteImport } from './routes/(main)/dashboard/ecommerce/route'
+import { Route as mainDashboardFileManagerRouteRouteImport } from './routes/(main)/dashboard/file-manager/route'
 import { Route as mainDashboardFinanceRouteRouteImport } from './routes/(main)/dashboard/finance/route'
 import { Route as mainDashboardInfrastructureRouteRouteImport } from './routes/(main)/dashboard/infrastructure/route'
 import { Route as mainDashboardInvoiceRouteRouteImport } from './routes/(main)/dashboard/invoice/route'
 import { Route as mainDashboardKanbanRouteRouteImport } from './routes/(main)/dashboard/kanban/route'
 import { Route as mainDashboardLogisticsRouteRouteImport } from './routes/(main)/dashboard/logistics/route'
 import { Route as mainDashboardMailRouteRouteImport } from './routes/(main)/dashboard/mail/route'
+import { Route as mainDashboardPatientMonitoringRouteRouteImport } from './routes/(main)/dashboard/patient-monitoring/route'
 import { Route as mainDashboardProductivityRouteRouteImport } from './routes/(main)/dashboard/productivity/route'
+import { Route as mainDashboardProfileRouteRouteImport } from './routes/(main)/dashboard/profile/route'
 import { Route as mainDashboardRolesRouteRouteImport } from './routes/(main)/dashboard/roles/route'
 import { Route as mainDashboardTasksRouteRouteImport } from './routes/(main)/dashboard/tasks/route'
 import { Route as mainDashboardUsersRouteRouteImport } from './routes/(main)/dashboard/users/route'
@@ -130,6 +133,12 @@ const mainDashboardEcommerceRouteRoute =
     path: '/ecommerce',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
+const mainDashboardFileManagerRouteRoute =
+  mainDashboardFileManagerRouteRouteImport.update({
+    id: '/file-manager',
+    path: '/file-manager',
+    getParentRoute: () => mainDashboardRouteRoute,
+  } as any)
 const mainDashboardFinanceRouteRoute =
   mainDashboardFinanceRouteRouteImport.update({
     id: '/finance',
@@ -165,10 +174,22 @@ const mainDashboardMailRouteRoute = mainDashboardMailRouteRouteImport.update({
   path: '/mail',
   getParentRoute: () => mainDashboardRouteRoute,
 } as any)
+const mainDashboardPatientMonitoringRouteRoute =
+  mainDashboardPatientMonitoringRouteRouteImport.update({
+    id: '/patient-monitoring',
+    path: '/patient-monitoring',
+    getParentRoute: () => mainDashboardRouteRoute,
+  } as any)
 const mainDashboardProductivityRouteRoute =
   mainDashboardProductivityRouteRouteImport.update({
     id: '/productivity',
     path: '/productivity',
+    getParentRoute: () => mainDashboardRouteRoute,
+  } as any)
+const mainDashboardProfileRouteRoute =
+  mainDashboardProfileRouteRouteImport.update({
+    id: '/profile',
+    path: '/profile',
     getParentRoute: () => mainDashboardRouteRoute,
   } as any)
 const mainDashboardRolesRouteRoute = mainDashboardRolesRouteRouteImport.update({
@@ -246,13 +267,16 @@ export interface FileRoutesByFullPath {
   '/dashboard/crm': typeof mainDashboardCrmRouteRoute
   '/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
+  '/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
   '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
+  '/dashboard/profile': typeof mainDashboardProfileRouteRoute
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
@@ -281,13 +305,16 @@ export interface FileRoutesByTo {
   '/dashboard/crm': typeof mainDashboardCrmRouteRoute
   '/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
+  '/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/dashboard/finance': typeof mainDashboardFinanceRouteRoute
   '/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
+  '/dashboard/profile': typeof mainDashboardProfileRouteRoute
   '/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/dashboard/users': typeof mainDashboardUsersRouteRoute
@@ -318,13 +345,16 @@ export interface FileRoutesById {
   '/(main)/dashboard/crm': typeof mainDashboardCrmRouteRoute
   '/(main)/dashboard/default': typeof mainDashboardDefaultRouteRoute
   '/(main)/dashboard/ecommerce': typeof mainDashboardEcommerceRouteRoute
+  '/(main)/dashboard/file-manager': typeof mainDashboardFileManagerRouteRoute
   '/(main)/dashboard/finance': typeof mainDashboardFinanceRouteRoute
   '/(main)/dashboard/infrastructure': typeof mainDashboardInfrastructureRouteRoute
   '/(main)/dashboard/invoice': typeof mainDashboardInvoiceRouteRoute
   '/(main)/dashboard/kanban': typeof mainDashboardKanbanRouteRoute
   '/(main)/dashboard/logistics': typeof mainDashboardLogisticsRouteRoute
   '/(main)/dashboard/mail': typeof mainDashboardMailRouteRoute
+  '/(main)/dashboard/patient-monitoring': typeof mainDashboardPatientMonitoringRouteRoute
   '/(main)/dashboard/productivity': typeof mainDashboardProductivityRouteRoute
+  '/(main)/dashboard/profile': typeof mainDashboardProfileRouteRoute
   '/(main)/dashboard/roles': typeof mainDashboardRolesRouteRoute
   '/(main)/dashboard/tasks': typeof mainDashboardTasksRouteRoute
   '/(main)/dashboard/users': typeof mainDashboardUsersRouteRoute
@@ -356,13 +386,16 @@ export interface FileRouteTypes {
     | '/dashboard/crm'
     | '/dashboard/default'
     | '/dashboard/ecommerce'
+    | '/dashboard/file-manager'
     | '/dashboard/finance'
     | '/dashboard/infrastructure'
     | '/dashboard/invoice'
     | '/dashboard/kanban'
     | '/dashboard/logistics'
     | '/dashboard/mail'
+    | '/dashboard/patient-monitoring'
     | '/dashboard/productivity'
+    | '/dashboard/profile'
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
@@ -391,13 +424,16 @@ export interface FileRouteTypes {
     | '/dashboard/crm'
     | '/dashboard/default'
     | '/dashboard/ecommerce'
+    | '/dashboard/file-manager'
     | '/dashboard/finance'
     | '/dashboard/infrastructure'
     | '/dashboard/invoice'
     | '/dashboard/kanban'
     | '/dashboard/logistics'
     | '/dashboard/mail'
+    | '/dashboard/patient-monitoring'
     | '/dashboard/productivity'
+    | '/dashboard/profile'
     | '/dashboard/roles'
     | '/dashboard/tasks'
     | '/dashboard/users'
@@ -427,13 +463,16 @@ export interface FileRouteTypes {
     | '/(main)/dashboard/crm'
     | '/(main)/dashboard/default'
     | '/(main)/dashboard/ecommerce'
+    | '/(main)/dashboard/file-manager'
     | '/(main)/dashboard/finance'
     | '/(main)/dashboard/infrastructure'
     | '/(main)/dashboard/invoice'
     | '/(main)/dashboard/kanban'
     | '/(main)/dashboard/logistics'
     | '/(main)/dashboard/mail'
+    | '/(main)/dashboard/patient-monitoring'
     | '/(main)/dashboard/productivity'
+    | '/(main)/dashboard/profile'
     | '/(main)/dashboard/roles'
     | '/(main)/dashboard/tasks'
     | '/(main)/dashboard/users'
@@ -574,6 +613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardEcommerceRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/file-manager': {
+      id: '/(main)/dashboard/file-manager'
+      path: '/file-manager'
+      fullPath: '/dashboard/file-manager'
+      preLoaderRoute: typeof mainDashboardFileManagerRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/finance': {
       id: '/(main)/dashboard/finance'
       path: '/finance'
@@ -616,11 +662,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof mainDashboardMailRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
+    '/(main)/dashboard/patient-monitoring': {
+      id: '/(main)/dashboard/patient-monitoring'
+      path: '/patient-monitoring'
+      fullPath: '/dashboard/patient-monitoring'
+      preLoaderRoute: typeof mainDashboardPatientMonitoringRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
     '/(main)/dashboard/productivity': {
       id: '/(main)/dashboard/productivity'
       path: '/productivity'
       fullPath: '/dashboard/productivity'
       preLoaderRoute: typeof mainDashboardProductivityRouteRouteImport
+      parentRoute: typeof mainDashboardRouteRoute
+    }
+    '/(main)/dashboard/profile': {
+      id: '/(main)/dashboard/profile'
+      path: '/profile'
+      fullPath: '/dashboard/profile'
+      preLoaderRoute: typeof mainDashboardProfileRouteRouteImport
       parentRoute: typeof mainDashboardRouteRoute
     }
     '/(main)/dashboard/roles': {
@@ -712,13 +772,16 @@ interface mainDashboardRouteRouteChildren {
   mainDashboardCrmRouteRoute: typeof mainDashboardCrmRouteRoute
   mainDashboardDefaultRouteRoute: typeof mainDashboardDefaultRouteRoute
   mainDashboardEcommerceRouteRoute: typeof mainDashboardEcommerceRouteRoute
+  mainDashboardFileManagerRouteRoute: typeof mainDashboardFileManagerRouteRoute
   mainDashboardFinanceRouteRoute: typeof mainDashboardFinanceRouteRoute
   mainDashboardInfrastructureRouteRoute: typeof mainDashboardInfrastructureRouteRoute
   mainDashboardInvoiceRouteRoute: typeof mainDashboardInvoiceRouteRoute
   mainDashboardKanbanRouteRoute: typeof mainDashboardKanbanRouteRoute
   mainDashboardLogisticsRouteRoute: typeof mainDashboardLogisticsRouteRoute
   mainDashboardMailRouteRoute: typeof mainDashboardMailRouteRoute
+  mainDashboardPatientMonitoringRouteRoute: typeof mainDashboardPatientMonitoringRouteRoute
   mainDashboardProductivityRouteRoute: typeof mainDashboardProductivityRouteRoute
+  mainDashboardProfileRouteRoute: typeof mainDashboardProfileRouteRoute
   mainDashboardRolesRouteRoute: typeof mainDashboardRolesRouteRoute
   mainDashboardTasksRouteRoute: typeof mainDashboardTasksRouteRoute
   mainDashboardUsersRouteRoute: typeof mainDashboardUsersRouteRoute
@@ -739,13 +802,17 @@ const mainDashboardRouteRouteChildren: mainDashboardRouteRouteChildren = {
   mainDashboardCrmRouteRoute: mainDashboardCrmRouteRoute,
   mainDashboardDefaultRouteRoute: mainDashboardDefaultRouteRoute,
   mainDashboardEcommerceRouteRoute: mainDashboardEcommerceRouteRoute,
+  mainDashboardFileManagerRouteRoute: mainDashboardFileManagerRouteRoute,
   mainDashboardFinanceRouteRoute: mainDashboardFinanceRouteRoute,
   mainDashboardInfrastructureRouteRoute: mainDashboardInfrastructureRouteRoute,
   mainDashboardInvoiceRouteRoute: mainDashboardInvoiceRouteRoute,
   mainDashboardKanbanRouteRoute: mainDashboardKanbanRouteRoute,
   mainDashboardLogisticsRouteRoute: mainDashboardLogisticsRouteRoute,
   mainDashboardMailRouteRoute: mainDashboardMailRouteRoute,
+  mainDashboardPatientMonitoringRouteRoute:
+    mainDashboardPatientMonitoringRouteRoute,
   mainDashboardProductivityRouteRoute: mainDashboardProductivityRouteRoute,
+  mainDashboardProfileRouteRoute: mainDashboardProfileRouteRoute,
   mainDashboardRolesRouteRoute: mainDashboardRolesRouteRoute,
   mainDashboardTasksRouteRoute: mainDashboardTasksRouteRoute,
   mainDashboardUsersRouteRoute: mainDashboardUsersRouteRoute,

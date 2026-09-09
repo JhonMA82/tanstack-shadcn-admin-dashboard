@@ -111,3 +111,121 @@ Keep a component inside its route until it is reused by another feature. Do not 
 - Include screenshots for new screens and material visual changes. Include mobile and dark-theme states when relevant.
 - Explain new reusable patterns or dependencies in the pull request.
 - Follow `CONTRIBUTING.md` for the contribution workflow.
+
+## Phase 1 contract (deterministic scaffolding)
+
+This repository is a reusable TanStack Start dashboard boilerplate and a source for derived
+products. Preserve its architecture, visual system, accessibility, and deterministic
+development workflow. Detailed rules live under `docs/`. This section contains only
+repository-wide instructions that must always be loaded alongside the TanStack sections above.
+
+### Required context
+
+Before planning or modifying product code, read:
+
+1. `PROJECT.md`
+2. `docs/architecture.md`
+3. `docs/ai/project-map.yaml`
+4. The applicable file under `docs/patterns/`
+5. `docs/ai/canonical-examples.yaml`
+6. The closest selected canonical example
+
+Do not scan the entire repository without a concrete reason. Load the target feature,
+direct dependencies, one applicable pattern, and no more than two canonical examples.
+
+Before TanStack implementation, consult the current official documentation:
+
+- TanStack Start: <https://tanstack.com/start/latest/docs/framework/react/overview>
+- TanStack Router: <https://tanstack.com/router/latest/docs/framework/react/overview>
+
+Before shadcn/ui work, inspect `components.json` and the relevant local source under
+`src/components/ui/`.
+
+### SSR-first invariants
+
+- `route.tsx` remains SSR-safe by default: no `"use client"` directives anywhere.
+- Browser APIs, event handlers, and local interaction state belong in focused components,
+  running inside effects, guarded client code, `<ClientOnly>`, or `createClientOnlyFn`.
+- Server-only behavior uses `createServerFn` and validates all client-controlled input.
+- Route-private components, schemas, data, and helpers stay with the owning route under
+  `-components/`, `-schemas/`, `-data/`, or `-lib/`.
+- Shared components require at least two concrete consumers.
+- Features do not import another feature's private internals.
+- `src/components/ui/` and `src/components/calendar/` are protected primitives.
+- New work does not use routes under `(legacy)` as references.
+- Server and utility layers do not depend on route modules.
+- Use existing `@/` aliases.
+- Use semantic theme tokens and existing layout primitives.
+- Do not add arbitrary hex, RGB, HSL, or OKLCH values to feature code.
+- Enforce authentication, authorization, and input validation at server trust boundaries.
+- Represent shareable filtering, sorting, pagination, and tab state in the URL.
+- Avoid `any`; use precise TypeScript types.
+- Sidebar entries use `url: AppPath` (route groups stripped, for example
+  `/dashboard/reports`) and `icon: LucideIcon` component references, never strings.
+
+### Scaffolding commands
+
+Do not invent route structures repeatedly. Use the repository generators:
+
+```bash
+npm run generate:feature -- <name>
+npm run generate:dashboard -- <name>
+npm run generate:crud -- <plural-entity>
+```
+
+Inspect generated files before implementation. Modify the scaffold to satisfy the approved
+product behavior, not to introduce speculative abstractions. Generated routes use the
+`route.tsx` form: `createFileRoute("/(main)/dashboard/<name>")` with `component`,
+`pendingComponent`, and `errorComponent` composed from `-components/`.
+
+### Canonical-example logging
+
+Select examples from `docs/ai/canonical-examples.yaml`. Record:
+
+- The selected example ID.
+- Why it applies.
+- Intentional deviations.
+
+Existing code is a reference, not an exception to current architecture rules.
+
+### Required states
+
+Implement applicable:
+
+- Loading.
+- Empty.
+- No filter results.
+- Error and retry.
+- Pending and disabled.
+- Permission denied.
+- Long-content and overflow.
+- Small and large viewport.
+- Keyboard and focus behavior.
+- Light and dark themes.
+
+### Validation
+
+During implementation, run focused checks. Before completion, run:
+
+```bash
+npm run validate
+```
+
+When repository structure changes, regenerate AI context:
+
+```bash
+npm run ai:context
+```
+
+A completion claim must include command evidence, skipped checks, and residual risks.
+
+### Repository safety
+
+Never:
+
+- Push or rewrite Git history without explicit approval.
+- Delete unrelated files.
+- Read non-example environment files or expose secrets.
+- Add a dependency without documenting why the existing stack is insufficient.
+- Modify protected primitives for feature-specific requirements.
+- Weaken validation to make an implementation pass.

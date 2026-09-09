@@ -3,8 +3,9 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["src/scripts/**/*.ts"],
+  "include": ["src/scripts/**/*.ts", "scripts/**/*.ts"],
   "ts-node": {
-    "esm": true
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }
