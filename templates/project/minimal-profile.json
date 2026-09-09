@@ -21,5 +21,6 @@
     "roles",
     "tasks",
     "users"
-  ]
+  ],
+  "removeStandaloneDirectories": ["chat", "mail"]
 }

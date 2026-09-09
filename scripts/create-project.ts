@@ -110,13 +110,24 @@ function sourceCommit(repositoryRoot: string): string {
   return result.status === 0 ? result.stdout.trim() : "unavailable";
 }
 
-async function applyMinimalProfile(destination: string): Promise<void> {
+interface MinimalProfileConfig {
+  removeDashboardDirectories: string[];
+  removeStandaloneDirectories?: string[];
+}
+
+async function applyMinimalProfile(repositoryRoot: string, destination: string): Promise<void> {
   const configPath = path.join(destination, "templates", "project", "minimal-profile.json");
-  const config = await readJson<{ removeDashboardDirectories: string[] }>(configPath);
+  const config = await readJson<MinimalProfileConfig>(configPath);
   const dashboardRoot = path.join(destination, "src", "routes", "(main)", "dashboard");
 
   for (const directory of config.removeDashboardDirectories) {
     await rm(path.join(dashboardRoot, directory), { recursive: true, force: true });
+  }
+
+  const standaloneRoot = path.join(destination, "src", "routes", "(main)");
+
+  for (const directory of config.removeStandaloneDirectories ?? []) {
+    await rm(path.join(standaloneRoot, directory), { recursive: true, force: true });
   }
 
   const sidebarTemplate = await readFile(
@@ -131,6 +142,36 @@ async function applyMinimalProfile(destination: string): Promise<void> {
     "utf8",
   );
   await writeFile(path.join(destination, "docs", "ai", "canonical-examples.yaml"), canonicalTemplate, "utf8");
+
+  await regenerateRouteTree(repositoryRoot, destination);
+}
+
+async function regenerateRouteTree(repositoryRoot: string, destination: string): Promise<void> {
+  const binaryName = process.platform === "win32" ? "tsr.cmd" : "tsr";
+  const tsrBinary = path.join(repositoryRoot, "node_modules", ".bin", binaryName);
+
+  if (!(await pathExists(tsrBinary))) {
+    console.warn(
+      "TanStack Router CLI not found; skipping route tree regeneration." +
+        " Run `npm run generate-routes` in the derived project after installing dependencies.",
+    );
+    return;
+  }
+
+  const result = spawnSync(tsrBinary, ["generate"], { cwd: destination, encoding: "utf8" });
+
+  if (result.status !== 0) {
+    console.warn(
+      "Route tree regeneration failed;" +
+        " run `npm run generate-routes` in the derived project after installing dependencies.",
+    );
+    if (typeof result.stderr === "string" && result.stderr.trim()) {
+      console.warn(result.stderr.trim());
+    }
+    return;
+  }
+
+  console.log("Regenerated src/routeTree.gen.ts for the minimal profile.");
 }
 
 function runCommand(command: string, args: string[], cwd: string, label: string): void {
@@ -191,7 +232,7 @@ export async function createProject(options: CreateProjectOptions): Promise<stri
   });
 
   if (profile === "minimal") {
-    await applyMinimalProfile(destination);
+    await applyMinimalProfile(repositoryRoot, destination);
   }
 
   await generateAiContext({ repositoryRoot: destination });

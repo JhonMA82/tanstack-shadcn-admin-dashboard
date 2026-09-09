@@ -166,8 +166,9 @@ compilable: reemplazarlo por el boundary de servidor antes de entregar.
   de alcance, elimina `new/`; si editar lo está, elimina `$id.tsx`.
 - **Dashboard oculto.** `--no-nav` genera la ruta sin sidebar, útil tras un
   feature flag o pendiente de aprobación.
-- **Proyecto derivado.** `--profile minimal` deja un solo dashboard canónico y
-  resetea el sidebar; `full` (por defecto) conserva todos los ejemplos.
+- **Proyecto derivado.** `--profile minimal` deja un solo dashboard canónico,
+  elimina las apps standalone `chat` y `mail`, resetea el sidebar y regenera
+  `src/routeTree.gen.ts`; `full` (por defecto) conserva todos los ejemplos.
   `--install` corre `npm install` y `--git-init` reinicia git en el destino.
 - **Destino inválido.** El proyecto derivado debe quedar fuera del boilerplate;
   si el destino existe, pide `--force` explícito.

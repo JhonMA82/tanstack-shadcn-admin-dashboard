@@ -54,9 +54,4 @@ export const sidebarItems: NavGroup[] = [
       },
     ],
   },
-  {
-    id: 2,
-    label: "Pages",
-    items: [],
-  },
 ];

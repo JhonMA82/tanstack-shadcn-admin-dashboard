@@ -6,7 +6,7 @@ import { createProject } from "./create-project.js";
 import { generateAiContext } from "./generate-ai-context.js";
 import { validateArchitecture } from "./validate-architecture.js";
 import { validateNavigation } from "./validate-navigation.js";
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -165,6 +165,43 @@ export const sidebarItems: NavGroup[] = [
   );
 }
 
+async function assertMissing(targetPath: string): Promise<void> {
+  if (await pathExists(targetPath)) {
+    throw new Error(`Expected path to be removed: ${targetPath}`);
+  }
+}
+
+async function seedMinimalFixture(fixtureRoot: string): Promise<void> {
+  const stubRoute = (routeId: string): string =>
+    [
+      'import { createFileRoute } from "@tanstack/react-router";',
+      "",
+      `export const Route = createFileRoute("${routeId}")({`,
+      "  component: Page,",
+      "});",
+      "",
+      "function Page() {",
+      "  return <main>Stub</main>;",
+      "}",
+      "",
+    ].join("\n");
+
+  await fixtureWrite(
+    path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "crm", "route.tsx"),
+    stubRoute("/(main)/dashboard/crm"),
+  );
+  await fixtureWrite(path.join(fixtureRoot, "src", "routes", "(main)", "chat", "route.tsx"), stubRoute("/(main)/chat"));
+  await fixtureWrite(path.join(fixtureRoot, "src", "routes", "(main)", "mail", "route.tsx"), stubRoute("/(main)/mail"));
+  await fixtureWrite(
+    path.join(fixtureRoot, "src", "routeTree.gen.ts"),
+    "// stale fixture route tree\n// references /(main)/dashboard/crm /(main)/chat /(main)/mail\n",
+  );
+
+  const tsrPath = path.join(fixtureRoot, "node_modules", ".bin", "tsr");
+  await fixtureWrite(tsrPath, ["#!/bin/sh", 'printf \'%s\\n\' "$@" > "$PWD/tsr-invocation.log"', ""].join("\n"));
+  await chmod(tsrPath, 0o755);
+}
+
 async function assertPath(targetPath: string): Promise<void> {
   if (!(await pathExists(targetPath))) {
     throw new Error(`Expected generated path: ${targetPath}`);
@@ -247,6 +284,56 @@ async function main(): Promise<void> {
 
     if (!context.includes("/dashboard/customers") || !context.includes("reports")) {
       throw new Error("Generated AI context did not include generated routes.");
+    }
+
+    const minimalRoot = path.join(temporaryRoot, "derived-minimal");
+    await seedMinimalFixture(fixtureRoot);
+    await createProject({
+      repositoryRoot: fixtureRoot,
+      name: "derived-minimal",
+      destination: minimalRoot,
+      profile: "minimal",
+    });
+
+    await assertMissing(path.join(minimalRoot, "src", "routes", "(main)", "dashboard", "crm"));
+    await assertMissing(path.join(minimalRoot, "src", "routes", "(main)", "chat"));
+    await assertMissing(path.join(minimalRoot, "src", "routes", "(main)", "mail"));
+    await assertPath(path.join(minimalRoot, "src", "routes", "(main)", "dashboard", "default", "route.tsx"));
+    await assertPath(path.join(minimalRoot, "src", "routes", "(main)", "dashboard", "reports", "route.tsx"));
+
+    const minimalSidebar = await readFile(
+      path.join(minimalRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
+      "utf8",
+    );
+    if (!minimalSidebar.includes("/dashboard/default") || minimalSidebar.includes("Pages")) {
+      throw new Error("Minimal profile did not reset the sidebar to the canonical dashboard.");
+    }
+
+    const minimalCanonical = await readFile(path.join(minimalRoot, "docs", "ai", "canonical-examples.yaml"), "utf8");
+    if (!minimalCanonical.includes("default-dashboard")) {
+      throw new Error("Minimal profile did not reset the canonical examples.");
+    }
+
+    await assertPath(path.join(minimalRoot, "tsr-invocation.log"));
+    const tsrInvocation = await readFile(path.join(minimalRoot, "tsr-invocation.log"), "utf8");
+    if (!tsrInvocation.includes("generate")) {
+      throw new Error("Minimal profile did not regenerate the route tree.");
+    }
+
+    const minimalNavigation = await validateNavigation(minimalRoot);
+    if (minimalNavigation.errors.length > 0) {
+      throw new Error(`Minimal navigation self-test failed:\n${minimalNavigation.errors.join("\n")}`);
+    }
+
+    const minimalArchitecture = await validateArchitecture(minimalRoot);
+    if (minimalArchitecture.errorCount > 0) {
+      throw new Error(
+        `Minimal architecture self-test produced ${minimalArchitecture.errorCount} errors:\n${JSON.stringify(
+          minimalArchitecture.findings,
+          null,
+          2,
+        )}`,
+      );
     }
 
     console.log("Phase 1 self-test passed.");
