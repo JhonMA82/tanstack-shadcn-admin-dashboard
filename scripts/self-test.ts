@@ -1,4 +1,5 @@
 import { pathExists, readJson } from "./_lib/files.js";
+import { resolveTsrBinary } from "./_lib/routes.js";
 import { createCrud } from "./create-crud.js";
 import { createDashboard } from "./create-dashboard.js";
 import { createFeature } from "./create-feature.js";
@@ -34,7 +35,19 @@ async function writeFixture(repositoryRoot: string, fixtureRoot: string): Promis
         name: "phase1-fixture",
         version: "1.0.0",
         private: true,
-        scripts: {},
+        scripts: {
+          "generate:project": "bun scripts/create-project.ts",
+          "generate:feature": "bun scripts/create-feature.ts",
+          "generate:dashboard": "bun scripts/create-dashboard.ts",
+          "generate:crud": "bun scripts/create-crud.ts",
+          "generate-routes": "tsr generate",
+          "ai:context": "bun scripts/generate-ai-context.ts",
+          "ai:context:check": "bun scripts/generate-ai-context.ts --check",
+          "validate:architecture": "bun scripts/validate-architecture.ts",
+          "validate:navigation": "bun scripts/validate-navigation.ts",
+          validate: "npm run check",
+          "phase1:self-test": "bun scripts/self-test.ts",
+        },
         dependencies: {
           "@tanstack/react-start": "^1.168.50",
           "@tanstack/react-router": "^1.167.1",
@@ -171,7 +184,8 @@ async function assertMissing(targetPath: string): Promise<void> {
   }
 }
 
-async function seedMinimalFixture(fixtureRoot: string): Promise<void> {
+async function seedMinimalFixture(fixtureRoot: string, options: { withTsr?: boolean } = {}): Promise<void> {
+  const { withTsr = true } = options;
   const stubRoute = (routeId: string): string =>
     [
       'import { createFileRoute } from "@tanstack/react-router";',
@@ -198,8 +212,12 @@ async function seedMinimalFixture(fixtureRoot: string): Promise<void> {
   );
 
   const tsrPath = path.join(fixtureRoot, "node_modules", ".bin", "tsr");
-  await fixtureWrite(tsrPath, ["#!/bin/sh", 'printf \'%s\\n\' "$@" > "$PWD/tsr-invocation.log"', ""].join("\n"));
-  await chmod(tsrPath, 0o755);
+  if (withTsr) {
+    await fixtureWrite(tsrPath, ["#!/bin/sh", 'printf \'%s\\n\' "$@" > "$PWD/tsr-invocation.log"', ""].join("\n"));
+    await chmod(tsrPath, 0o755);
+  } else {
+    await rm(tsrPath, { recursive: true, force: true });
+  }
 }
 
 async function assertPath(targetPath: string): Promise<void> {
@@ -233,6 +251,12 @@ async function main(): Promise<void> {
       routeName: "customers",
       refreshContext: false,
     });
+    await createCrud({
+      repositoryRoot: fixtureRoot,
+      routeName: "inventory-items",
+      singularName: "inventory-item",
+      refreshContext: false,
+    });
 
     await assertPath(path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "reports", "route.tsx"));
     await assertPath(
@@ -248,6 +272,23 @@ async function main(): Promise<void> {
       ),
     );
     await assertPath(path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "customers", "$id.tsx"));
+    await assertPath(path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "inventory-items", "$id.tsx"));
+
+    const inventoryIndex = await readFile(
+      path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "inventory-items", "route.tsx"),
+      "utf8",
+    );
+    if (!inventoryIndex.includes("inventory-item") || !inventoryIndex.includes("inventory-items")) {
+      throw new Error("CRUD with explicit singular did not use inventory-item / inventory-items correctly.");
+    }
+
+    const fixtureSidebar = await readFile(
+      path.join(fixtureRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
+      "utf8",
+    );
+    if (!fixtureSidebar.includes("/dashboard/reports")) {
+      throw new Error("Feature with --nav did not register a navigation entry for reports.");
+    }
 
     await generateAiContext({ repositoryRoot: fixtureRoot });
 
@@ -274,11 +315,86 @@ async function main(): Promise<void> {
       profile: "full",
     });
 
-    const derivedPackage = await readJson<{ name: string; version: string }>(path.join(derivedRoot, "package.json"));
+    const derivedPackage = await readJson<{ name: string; version: string; scripts?: Record<string, string> }>(
+      path.join(derivedRoot, "package.json"),
+    );
 
     if (derivedPackage.name !== "derived-project" || derivedPackage.version !== "0.1.0") {
       throw new Error("Derived project package identity was not updated correctly.");
     }
+
+    for (const script of [
+      "generate:feature",
+      "generate:dashboard",
+      "generate:crud",
+      "ai:context",
+      "validate:architecture",
+      "validate:navigation",
+    ]) {
+      if (!derivedPackage.scripts?.[script]) {
+        throw new Error(`Derived project lost required scaffolding script: ${script}.`);
+      }
+    }
+
+    for (const script of ["generate:project", "phase1:self-test"]) {
+      if (derivedPackage.scripts?.[script]) {
+        throw new Error(`Derived project must not keep source-only script: ${script}.`);
+      }
+    }
+
+    for (const sourceOnly of [
+      path.join(derivedRoot, "scripts", "create-project.ts"),
+      path.join(derivedRoot, "scripts", "self-test.ts"),
+      path.join(derivedRoot, "templates", "project"),
+    ]) {
+      await assertMissing(sourceOnly);
+    }
+
+    await assertPath(path.join(derivedRoot, "templates", "feature"));
+    await assertPath(path.join(derivedRoot, "templates", "dashboard"));
+    await assertPath(path.join(derivedRoot, "templates", "crud"));
+    await assertPath(path.join(derivedRoot, "scripts", "_lib"));
+
+    const derivedProjectMap = await readFile(path.join(derivedRoot, "docs", "ai", "project-map.yaml"), "utf8");
+    if (/^\s*generateProject:/m.test(derivedProjectMap)) {
+      throw new Error("Derived project-map.yaml still advertises the removed generateProject capability.");
+    }
+
+    await createFeature({
+      repositoryRoot: derivedRoot,
+      name: "reports",
+      navigation: true,
+      force: true,
+      refreshContext: false,
+    });
+    await createDashboard({
+      repositoryRoot: derivedRoot,
+      name: "operations",
+      force: true,
+      refreshContext: false,
+    });
+    await createCrud({
+      repositoryRoot: derivedRoot,
+      routeName: "inventory-items",
+      singularName: "inventory-item",
+      force: true,
+      refreshContext: false,
+    });
+
+    await assertPath(path.join(derivedRoot, "src", "routes", "(main)", "dashboard", "reports", "route.tsx"));
+    await assertPath(
+      path.join(
+        derivedRoot,
+        "src",
+        "routes",
+        "(main)",
+        "dashboard",
+        "operations",
+        "-components",
+        "operations-kpis.tsx",
+      ),
+    );
+    await assertPath(path.join(derivedRoot, "src", "routes", "(main)", "dashboard", "inventory-items", "$id.tsx"));
 
     const context = await readFile(path.join(fixtureRoot, "docs", "ai", "generated-context.md"), "utf8");
 
@@ -320,6 +436,45 @@ async function main(): Promise<void> {
       throw new Error("Minimal profile did not regenerate the route tree.");
     }
 
+    const noCliSource = path.join(temporaryRoot, "boilerplate-no-cli");
+    await writeFixture(repositoryRoot, noCliSource);
+    await seedMinimalFixture(noCliSource, { withTsr: false });
+
+    const destinationCliSource = path.join(temporaryRoot, "boilerplate-destination-cli");
+    await writeFixture(repositoryRoot, destinationCliSource);
+    await seedMinimalFixture(destinationCliSource, { withTsr: true });
+    const destinationCliProbe = path.join(temporaryRoot, "destination-cli-probe");
+    await mkdir(path.join(destinationCliProbe, "node_modules", ".bin"), { recursive: true });
+    const destinationTsr = path.join(destinationCliProbe, "node_modules", ".bin", "tsr");
+    await fixtureWrite(destinationTsr, "#!/bin/sh\n");
+    const preferredTsr = await resolveTsrBinary(destinationCliSource, destinationCliProbe);
+    if (preferredTsr !== destinationTsr) {
+      throw new Error("TanStack Router CLI resolution must prefer the destination installation over the source.");
+    }
+    const fallbackTsr = await resolveTsrBinary(destinationCliSource, path.join(temporaryRoot, "destination-cli-empty"));
+    if (fallbackTsr !== path.join(destinationCliSource, "node_modules", ".bin", "tsr")) {
+      throw new Error("TanStack Router CLI resolution must fall back to the boilerplate source installation.");
+    }
+    if ((await resolveTsrBinary(noCliSource, path.join(temporaryRoot, "destination-cli-empty"))) !== null) {
+      throw new Error("TanStack Router CLI resolution must be null when neither installation exists.");
+    }
+    let minimalWithoutCliFailed = false;
+    try {
+      await createProject({
+        repositoryRoot: noCliSource,
+        name: "derived-no-cli",
+        destination: path.join(temporaryRoot, "derived-no-cli"),
+        profile: "minimal",
+      });
+    } catch {
+      minimalWithoutCliFailed = true;
+    }
+    if (!minimalWithoutCliFailed) {
+      throw new Error(
+        "Minimal profile without a TanStack Router CLI must fail instead of shipping a stale route tree.",
+      );
+    }
+
     const minimalNavigation = await validateNavigation(minimalRoot);
     if (minimalNavigation.errors.length > 0) {
       throw new Error(`Minimal navigation self-test failed:\n${minimalNavigation.errors.join("\n")}`);
@@ -338,9 +493,15 @@ async function main(): Promise<void> {
 
     console.log("Phase 1 self-test passed.");
     console.log("- Feature generator: passed");
+    console.log("- Feature generator with --nav: passed");
     console.log("- Dashboard generator: passed");
     console.log("- CRUD generator: passed");
+    console.log("- CRUD generator with --singular: passed");
     console.log("- Project generator: passed");
+    console.log("- Derived scaffolding contract: passed");
+    console.log("- Minimal route tree (source CLI): passed");
+    console.log("- Minimal route tree (destination CLI): passed");
+    console.log("- Minimal without CLI fails explicitly: passed");
     console.log("- AI context generation: passed");
     console.log("- Architecture validation: passed");
     console.log("- Navigation validation: passed");
