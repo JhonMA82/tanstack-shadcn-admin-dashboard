@@ -1,0 +1,78 @@
+schemaVersion: 1
+
+selectionRules:
+  - Select the closest current non-legacy screen by information architecture and interaction.
+  - Inspect no more than two examples unless a design explains why more are required.
+  - Record selected example IDs and intentional deviations.
+  - Existing code is a reference, not permission to copy defects or obsolete patterns.
+  - Never select a route under "(legacy)" for new development.
+
+examples:
+  default-dashboard:
+    path: src/routes/(main)/dashboard/default
+    useFor:
+      - baseline dashboard shell
+      - neutral theme composition
+      - general overview layout
+    status: current
+
+  finance-dashboard:
+    path: src/routes/(main)/dashboard/finance
+    useFor:
+      - financial KPI hierarchy
+      - dense dashboard composition
+      - chart and metric layout
+    status: current
+
+  infrastructure-dashboard:
+    path: src/routes/(main)/dashboard/infrastructure
+    useFor:
+      - operational status
+      - resource and health presentation
+      - technical metric grouping
+    status: current
+
+  crm-dashboard:
+    path: src/routes/(main)/dashboard/crm
+    useFor:
+      - customer and pipeline hierarchy
+      - business activity composition
+      - CRM-oriented widgets
+    status: current
+
+  analytics-dashboard:
+    path: src/routes/(main)/dashboard/analytics
+    useFor:
+      - trend visualization
+      - chart-heavy responsive layout
+      - analytics composition
+    status: current
+
+  users-management:
+    path: src/routes/(main)/dashboard/users
+    useFor:
+      - entity list
+      - user-management information architecture
+      - table and action composition
+    status: current
+
+  roles-management:
+    path: src/routes/(main)/dashboard/roles
+    useFor:
+      - permissions-oriented UI
+      - role list and actions
+      - access-management composition
+    status: current
+
+protectedExamples:
+  ui-primitives:
+    path: src/components/ui
+    rule: inspect-and-compose-do-not-feature-customize
+
+  calendar-primitives:
+    path: src/components/calendar
+    rule: inspect-and-compose-do-not-feature-customize
+
+deprecated:
+  - path: src/routes/(main)/dashboard/(legacy)
+    reason: maintenance-only implementation

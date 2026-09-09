@@ -1,0 +1,66 @@
+schemaVersion: 1
+
+project:
+  template: studio-admin
+  upstreamVersion: 2.2.0
+  framework: tanstack-start
+  router: tanstack-router
+  language: typescript
+  packageManager: npm
+  formatting: biome
+  styling: tailwind-css-v4
+  componentLibrary: shadcn-ui
+  componentStyle: base-nova
+  serverComponentsByDefault: false
+  ssrFirst: true
+
+paths:
+  routes: src/routes
+  dashboardRoutes: src/routes/(main)/dashboard
+  routePrivateComponents: src/routes/(main)/dashboard/<feature>/-components
+  sharedDashboardComponents: src/routes/(main)/dashboard/-components
+  sharedApplicationComponents: src/components
+  uiPrimitives: src/components/ui
+  calendarPrimitives: src/components/calendar
+  hooks: src/hooks
+  utilities: src/lib
+  navigation: src/navigation/sidebar/sidebar-items.ts
+  server: src/server
+  stores: src/stores
+  themePresets: src/styles/presets
+  generatorTemplates: templates
+  repositoryScripts: scripts
+  generatedContext: docs/ai/generated-context.md
+
+protectedPaths:
+  - src/components/ui/**
+  - src/components/calendar/**
+
+excludedReferences:
+  - src/routes/(main)/dashboard/(legacy)/**
+
+commands:
+  generateProject: npm run generate:project --
+  generateFeature: npm run generate:feature --
+  generateCrud: npm run generate:crud --
+  generateDashboard: npm run generate:dashboard --
+  generateContext: npm run ai:context
+  checkContext: npm run ai:context:check
+  validateArchitecture: npm run validate:architecture
+  validateNavigation: npm run validate:navigation
+  validate: npm run validate
+
+invariants:
+  - route.tsx remains SSR-safe by default
+  - no "use client" directives anywhere
+  - browser APIs run only in effects, guarded client code, <ClientOnly>, or createClientOnlyFn
+  - server behavior uses createServerFn with input validation
+  - interactive behavior is isolated in focused components
+  - route-private code stays with its owning route
+  - shared components require concrete multiple consumers
+  - feature code does not modify protected primitives
+  - feature code does not import another feature's private internals
+  - server and utility layers do not import route modules
+  - semantic theme tokens are preferred
+  - legacy routes are not references for new work
+  - generated AI context remains current
