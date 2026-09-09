@@ -12,10 +12,10 @@ export function {{PASCAL_NAME}}Kpis() {
       {metrics.map((metric) => (
         <Card key={metric.label}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{metric.label}</CardTitle>
+            <CardTitle className="font-medium text-muted-foreground text-sm">{metric.label}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold tabular-nums">{metric.value}</p>
+            <p className="font-semibold text-2xl tabular-nums">{metric.value}</p>
           </CardContent>
         </Card>
       ))}

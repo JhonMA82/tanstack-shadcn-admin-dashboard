@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function {{PASCAL_PLURAL}}Pending() {
   return (
-    <div className="space-y-6" aria-label="Loading {{TITLE_PLURAL}}">
+    <div className="space-y-6" role="status" aria-label="Loading {{TITLE_PLURAL}}">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2">
           <Skeleton className="h-8 w-48" />

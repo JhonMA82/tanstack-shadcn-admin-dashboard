@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { {{CAMEL_SINGULAR}}Schema, type {{PASCAL_SINGULAR}}Input } from "../-schemas/{{ENTITY_SINGULAR}}";
+import { type {{PASCAL_SINGULAR}}Input, {{CAMEL_SINGULAR}}Schema } from "../-schemas/{{ENTITY_SINGULAR}}";
 
 interface {{PASCAL_SINGULAR}}FormProps {
   defaultValues?: Partial<{{PASCAL_SINGULAR}}Input>;
@@ -28,7 +28,7 @@ export function {{PASCAL_SINGULAR}}Form({ defaultValues, onSubmit }: {{PASCAL_SI
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" noValidate>
       <div className="space-y-2">
-        <label htmlFor="{{ENTITY_SINGULAR}}-name" className="text-sm font-medium">
+        <label htmlFor="{{ENTITY_SINGULAR}}-name" className="font-medium text-sm">
           Name
         </label>
         <Input
@@ -38,19 +38,19 @@ export function {{PASCAL_SINGULAR}}Form({ defaultValues, onSubmit }: {{PASCAL_SI
           {...form.register("name")}
         />
         {form.formState.errors.name ? (
-          <p id="{{ENTITY_SINGULAR}}-name-error" className="text-sm text-destructive">
+          <p id="{{ENTITY_SINGULAR}}-name-error" className="text-destructive text-sm">
             {form.formState.errors.name.message}
           </p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="{{ENTITY_SINGULAR}}-status" className="text-sm font-medium">
+        <label htmlFor="{{ENTITY_SINGULAR}}-status" className="font-medium text-sm">
           Status
         </label>
         <select
           id="{{ENTITY_SINGULAR}}-status"
-          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 text-sm outline-none focus-visible:ring-[3px]"
+          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           {...form.register("status")}
         >
           <option value="active">Active</option>

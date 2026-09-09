@@ -9,7 +9,7 @@ export function {{PASCAL_NAME}}Activity() {
       </CardHeader>
       <CardContent>
         <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-sm text-muted-foreground">No activity data connected.</p>
+          <p className="text-muted-foreground text-sm">No activity data connected.</p>
         </div>
       </CardContent>
     </Card>
