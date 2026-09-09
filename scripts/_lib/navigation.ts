@@ -91,25 +91,70 @@ function ensureIconImport(source: string, icon: string): string {
     throw new Error("Unable to find the lucide-react import in sidebar-items.ts.");
   }
 
-  const importedNames = match[1]
+  const specifiers = match[1]
     .split(",")
-    .map((value) => value.trim().replace(/^type\s+/, ""))
-    .filter(Boolean);
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      const typeMatch = value.match(/^type\s+(\w+)$/);
+      return typeMatch ? { name: typeMatch[1], prefix: "type " } : { name: value, prefix: "" };
+    });
 
-  if (importedNames.includes(icon)) {
+  if (specifiers.some((specifier) => specifier.name === icon)) {
     return source;
   }
 
-  const body = match[1];
-  const typeIndex = body.indexOf("type LucideIcon");
-  const insertionIndex = typeIndex >= 0 ? typeIndex : body.length;
-  const updatedBody = `${body.slice(0, insertionIndex)}${icon},\n  ${body.slice(insertionIndex)}`;
+  // Keep biome's sorted import order (by imported name, type modifiers
+  // preserved) so generated sidebars pass `npm run check` untouched.
+  const sorted = [...specifiers, { name: icon, prefix: "" }].sort((a, b) => {
+    if (a.name === b.name) {
+      return 0;
+    }
+    return a.name < b.name ? -1 : 1;
+  });
+  const rendered = sorted.map((specifier) => `${specifier.prefix}${specifier.name}`);
 
-  return source.replace(importPattern, `import {${updatedBody}} from "lucide-react";`);
+  const singleLine = `import { ${rendered.join(", ")} } from "lucide-react";`;
+  if (singleLine.length <= 120) {
+    return source.replace(importPattern, singleLine);
+  }
+
+  const multiline = `import {\n  ${rendered.map((name) => `${name},`).join("\n  ")}\n} from "lucide-react";`;
+  return source.replace(importPattern, multiline);
 }
 
 /**
- * Register a sidebar entry. URLs are public AppPaths with `(group)` segments
+ * Create a missing navigation group at the end of sidebarItems with the
+ * next numeric id, keeping biome-clean formatting. Minimal profiles only
+ * ship the Dashboards group, so feature/CRUD generators rely on this to
+ * register --nav entries without manual sidebar edits.
+ */
+function createNavigationGroup(source: string, group: string): string {
+  const declaration = /export const sidebarItems[^=]*=\s*\[/;
+  const declarationMatch = source.match(declaration);
+  if (!declarationMatch || declarationMatch.index === undefined) {
+    throw new Error("Unable to locate the sidebarItems array.");
+  }
+  const arrayStart = declarationMatch.index + declarationMatch[0].length - 1;
+  const arrayEnd = findMatchingBracket(source, arrayStart);
+
+  let maxId = 0;
+  for (const match of source.slice(arrayStart, arrayEnd).matchAll(/\bid:\s*(\d+)/g)) {
+    maxId = Math.max(maxId, Number(match[1]));
+  }
+
+  let insertAt = arrayEnd;
+  while (insertAt > arrayStart && /\s/.test(source[insertAt - 1] ?? "")) {
+    insertAt -= 1;
+  }
+  const entry = ["  {", `    id: ${maxId + 1},`, `    label: "${group}",`, "    items: [],", "  },"].join("\n");
+  const snippet = insertAt === arrayStart + 1 ? `\n${entry}\n` : `\n${entry}`;
+
+  return `${source.slice(0, insertAt)}${snippet}${source.slice(insertAt)}`;
+}
+
+/**
+ * Register a sidebar entry, creating the group when it does not exist yet. URLs are public AppPaths with `(group)` segments
  * stripped (for example `/dashboard/reports`), and icons are Lucide component
  * references (not strings) matching `icon: LucideIcon` in sidebar-items.ts.
  */
@@ -129,7 +174,12 @@ export async function addNavigationItem(repositoryRoot: string, input: Navigatio
   source = ensureIconImport(source, input.icon);
 
   const labelPattern = new RegExp(`label:\\s*["']${escapeRegExp(input.group)}["']`);
-  const labelMatch = source.match(labelPattern);
+  let labelMatch = source.match(labelPattern);
+
+  if (labelMatch === null) {
+    source = createNavigationGroup(source, input.group);
+    labelMatch = source.match(labelPattern);
+  }
 
   if (labelMatch === null) {
     throw new Error(`Navigation group "${input.group}" was not found.`);

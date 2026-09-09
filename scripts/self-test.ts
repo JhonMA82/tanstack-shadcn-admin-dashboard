@@ -497,6 +497,28 @@ async function main(): Promise<void> {
       );
     }
 
+    await createFeature({
+      repositoryRoot: minimalRoot,
+      name: "reports",
+      navigation: true,
+      force: true,
+      refreshContext: false,
+    });
+    const minimalReportsSidebar = await readFile(
+      path.join(minimalRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
+      "utf8",
+    );
+    if (!minimalReportsSidebar.includes('label: "Pages"')) {
+      throw new Error("Feature with --nav did not create the missing Pages group on a minimal sidebar.");
+    }
+    if (!minimalReportsSidebar.includes("/dashboard/reports")) {
+      throw new Error("Feature with --nav did not register reports on a minimal sidebar.");
+    }
+    const minimalReportsNavigation = await validateNavigation(minimalRoot);
+    if (minimalReportsNavigation.errors.length > 0) {
+      throw new Error(`Minimal reports navigation self-test failed:\n${minimalReportsNavigation.errors.join("\n")}`);
+    }
+
     console.log("Phase 1 self-test passed.");
     console.log("- Feature generator: passed");
     console.log("- Feature generator with --nav: passed");
@@ -508,6 +530,7 @@ async function main(): Promise<void> {
     console.log("- Minimal route tree (source CLI): passed");
     console.log("- Minimal route tree (destination CLI): passed");
     console.log("- Minimal without CLI fails explicitly: passed");
+    console.log("- Feature --nav creates missing group: passed");
     console.log("- npm policy failure detection: passed");
     console.log("- AI context generation: passed");
     console.log("- Architecture validation: passed");
