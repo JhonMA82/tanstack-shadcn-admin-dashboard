@@ -178,10 +178,11 @@ compilable: reemplazarlo por el boundary de servidor antes de entregar.
   `--install` corre `npm install` y `--git-init` reinicia git en el destino.
 - **Destino inválido.** El proyecto derivado debe quedar fuera del boilerplate;
   si el destino existe, pide `--force` explícito.
-- **`--install` falla con `EALLOWSCRIPTS`.** Tu `~/.npmrc` global restringe
-  los lifecycle scripts (`allow-scripts`); no es un bug del generador.
-  Reintentá con una config neutra (el destino parcial requiere `--force`):
-  `npm_config_userconfig=/dev/null npm run generate:project -- <name> --profile minimal --install --force`.
+- **`--install` bajo una política `allow-scripts`.** Si tu npm global
+  restringe lifecycle scripts, el generador lo detecta: limpia el
+  `npm_config_allow_scripts` heredado de `npm run` (artefacto, no tu
+  intención) y reintenta con config neutra si hace falta, avisando en
+  consola. No necesitás setear variables manualmente.
 - **Contexto desactualizado.** Tras editar patrones o generar rutas fuera de
   línea, `npm run ai:context:check` avisa; `npm run ai:context` lo regenera.
 

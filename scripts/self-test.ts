@@ -3,7 +3,7 @@ import { resolveTsrBinary } from "./_lib/routes.js";
 import { createCrud } from "./create-crud.js";
 import { createDashboard } from "./create-dashboard.js";
 import { createFeature } from "./create-feature.js";
-import { createProject } from "./create-project.js";
+import { createProject, isNpmLifecyclePolicyFailure } from "./create-project.js";
 import { generateAiContext } from "./generate-ai-context.js";
 import { validateArchitecture } from "./validate-architecture.js";
 import { validateNavigation } from "./validate-navigation.js";
@@ -458,6 +458,12 @@ async function main(): Promise<void> {
     if ((await resolveTsrBinary(noCliSource, path.join(temporaryRoot, "destination-cli-empty"))) !== null) {
       throw new Error("TanStack Router CLI resolution must be null when neither installation exists.");
     }
+    if (!isNpmLifecyclePolicyFailure("npm error code EALLOWSCRIPTS\nnpm error --allow-scripts is not allowed")) {
+      throw new Error("npm lifecycle policy failures must be detected from install output.");
+    }
+    if (isNpmLifecyclePolicyFailure("npm error code ENETUNREACH\nrequest to registry failed")) {
+      throw new Error("Unrelated npm failures must not be mistaken for lifecycle policy blocks.");
+    }
     let minimalWithoutCliFailed = false;
     try {
       await createProject({
@@ -502,6 +508,7 @@ async function main(): Promise<void> {
     console.log("- Minimal route tree (source CLI): passed");
     console.log("- Minimal route tree (destination CLI): passed");
     console.log("- Minimal without CLI fails explicitly: passed");
+    console.log("- npm policy failure detection: passed");
     console.log("- AI context generation: passed");
     console.log("- Architecture validation: passed");
     console.log("- Navigation validation: passed");

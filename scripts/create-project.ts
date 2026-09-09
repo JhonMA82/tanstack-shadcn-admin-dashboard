@@ -4,8 +4,9 @@ import { assertKebabCase, titleCase } from "./_lib/naming.js";
 import { resolveTsrBinary } from "./_lib/routes.js";
 import { renderTemplate } from "./_lib/templates.js";
 import { generateAiContext } from "./generate-ai-context.js";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -275,6 +276,93 @@ function runCommand(command: string, args: string[], cwd: string, label: string)
   }
 }
 
+interface NpmInstallResult {
+  status: number | null;
+  output: string;
+}
+
+/**
+ * Run npm install streaming output live while buffering it for failure
+ * analysis. Returns the exit status with the combined output.
+ */
+function spawnNpmInstall(destination: string, extraEnv?: NodeJS.ProcessEnv): Promise<NpmInstallResult> {
+  return new Promise((resolve, reject) => {
+    // npm exposes its resolved config as npm_config_* vars to scripts. When
+    // this generator runs via `npm run`, the outer allow-scripts value leaks
+    // in as npm_config_allow_scripts and npm 12 misclassifies it as a CLI
+    // flag, refusing every project install. Strip that leaked artifact so the
+    // inner install behaves as if invoked directly; file-based config still
+    // applies normally. All other npm_config_* entries (registry, auth) are
+    // preserved.
+    const childEnv: NodeJS.ProcessEnv = { ...process.env, ...extraEnv };
+    delete childEnv.npm_config_allow_scripts;
+    const child = spawn("npm", ["install"], {
+      cwd: destination,
+      env: childEnv,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let output = "";
+    child.stdout?.on("data", (chunk: Buffer) => {
+      process.stdout.write(chunk);
+      output += chunk.toString();
+    });
+    child.stderr?.on("data", (chunk: Buffer) => {
+      process.stderr.write(chunk);
+      output += chunk.toString();
+    });
+    child.on("error", reject);
+    child.on("close", (status) => {
+      resolve({ status, output });
+    });
+  });
+}
+
+export function isNpmLifecyclePolicyFailure(output: string): boolean {
+  return /EALLOWSCRIPTS|allow-scripts/i.test(output);
+}
+
+async function neutralNpmUserConfig(): Promise<string> {
+  const configPath = path.join(os.tmpdir(), "studio-admin-empty-npmrc");
+  await writeFile(configPath, "", "utf8");
+  return configPath;
+}
+
+async function runNpmInstall(destination: string): Promise<void> {
+  const first = await spawnNpmInstall(destination);
+
+  if (first.status === 0) {
+    return;
+  }
+
+  if (!isNpmLifecyclePolicyFailure(first.output)) {
+    throw new Error(
+      `npm install failed with status ${first.status ?? "unknown"}.\n\n` +
+        `The derived project at ${destination} is incomplete (dependencies were not installed).\n` +
+        `Fix the reported npm error and retry with --force to replace the partial destination.`,
+    );
+  }
+
+  console.log(
+    "Global npm config restricts lifecycle scripts (allow-scripts) and npm refused the install." +
+      " Retrying once with a neutral npm config for this install only.",
+  );
+
+  const second = await spawnNpmInstall(destination, {
+    npm_config_userconfig: await neutralNpmUserConfig(),
+  });
+
+  if (second.status === 0) {
+    return;
+  }
+
+  throw new Error(
+    `npm install failed with status ${second.status ?? "unknown"} even with a neutral npm config.\n\n` +
+      `The derived project at ${destination} is incomplete (dependencies were not installed).\n` +
+      `Fix the reported npm error and retry with --force to replace the partial destination.`,
+  );
+}
+
 export async function createProject(options: CreateProjectOptions): Promise<string> {
   const {
     repositoryRoot,
@@ -329,17 +417,7 @@ export async function createProject(options: CreateProjectOptions): Promise<stri
   }
 
   if (installDependencies) {
-    try {
-      runCommand("npm", ["install"], destination, "npm install");
-    } catch (error) {
-      throw new Error(
-        `${error instanceof Error ? error.message : error}\n\n` +
-          `The derived project at ${destination} is incomplete (dependencies were not installed).\n` +
-          `If npm reported EALLOWSCRIPTS, your global npm config restricts lifecycle scripts; retry with a neutral config, e.g.:\n` +
-          `  npm_config_userconfig=/dev/null npm run generate:project -- ${packageName} --profile ${profile} --install --destination ${destination} --force\n` +
-          `Otherwise fix the reported npm error and retry with --force to replace the partial destination.`,
-      );
-    }
+    await runNpmInstall(destination);
   }
 
   if (profile === "minimal") {
