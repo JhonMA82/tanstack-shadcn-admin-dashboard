@@ -1,6 +1,59 @@
-# TanStack Start Admin Template with TypeScript & Shadcn UI
+# Studio Admin — Engineering Platform-ready fork
+
+> **Engineering Platform-ready fork of Studio Admin**: a curated TanStack Start boilerplate with deterministic scaffolding (`full` and `minimal` profiles), AI context generation, and architecture/navigation validators. Upstream project credit is preserved below.
+>
+> Upstream: <https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard>
 
 **Studio Admin** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
+
+## Fork overview
+
+This fork adds, on top of upstream:
+
+- Deterministic project scaffolding: `npm run generate:project -- <name> --profile full|minimal`.
+- Minimal profile with a single canonical dashboard, reset sidebar, and regenerated route tree.
+- Persistent scaffolding inside derived projects for Gentle AI: `generate:feature` (with `--nav`), `generate:dashboard`, `generate:crud` (with `--singular`), plus `ai:context` and validators.
+- Machine-readable AI contract in `docs/ai/project-map.yaml` and generated context via `npm run ai:context`.
+- Executable quality gates: `npm run validate`, `npm run phase1:self-test`.
+
+## Requirements
+
+- **npm** is the package manager: `npm install` manages application dependencies.
+- **Bun** is the script/tooling runtime: `npm run generate:*`, `ai:context`, and `validate:*` scripts invoke TypeScript tooling internally through Bun.
+
+## Quick start (boilerplate)
+
+```bash
+git clone https://github.com/JhonMA82/tanstack-shadcn-admin-dashboard.git
+cd tanstack-shadcn-admin-dashboard
+npm install
+```
+
+Create a derived project with every example:
+
+```bash
+npm run generate:project -- demo-admin --profile full
+```
+
+Create a minimal derived project (recommended from a clean clone):
+
+```bash
+npm run generate:project -- inventory-admin --profile minimal --install
+```
+
+## Scaffolding in the derived project
+
+These commands remain available inside the derived project:
+
+```bash
+npm run generate:feature -- reports
+npm run generate:feature -- reports --nav
+npm run generate:dashboard -- operations
+npm run generate:crud -- customers
+npm run generate:crud -- inventory-items --singular inventory-item
+```
+
+The derived project intentionally cannot create another project (`generate:project` is removed).
 
 <img src="https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
 
@@ -50,6 +103,7 @@ Most admin templates I found, free or paid, felt cluttered, outdated, or too rig
 ## Screens
 
 ### Available
+
 - Default Dashboard  
 - CRM Dashboard  
 - Finance Dashboard  
@@ -73,6 +127,7 @@ Most admin templates I found, free or paid, felt cluttered, outdated, or too rig
 - Legacy: Default v1, CRM v1, Finance v1, Analytics v1
 
 ### Planned
+
 - I've added all the planned screens. Feel free to open an issue for requesting something specific.
 
 ## Colocation File System Architecture
@@ -90,26 +145,30 @@ You can run this project locally, or deploy it instantly with Vercel.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Ftanstack-shadcn-admin-dashboard)
 
-_Deploy your own copy with one click._
+*Deploy your own copy with one click.*
 
 ### Run locally
 
 1. **Clone the repository**
+
    ```bash
-   git clone https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard.git
+   git clone https://github.com/JhonMA82/tanstack-shadcn-admin-dashboard.git
    ```
-   
+
 2. **Navigate into the project**
+
    ```bash
     cd tanstack-shadcn-admin-dashboard
    ```
-   
+
 3. **Install dependencies**
+
    ```bash
     npm install
    ```
 
 4. **Start the development server**
+
    ```bash
     npm run dev
    ```
@@ -119,9 +178,11 @@ Your app will be running at [http://localhost:3000](http://localhost:3000)
 ### Formatting and Linting
 
 Format, lint, and organize imports
+
 ```bash
 npx @biomejs/biome check --write
 ```
+
 > For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
 
 ---
@@ -132,6 +193,5 @@ npx @biomejs/biome check --write
 ---
 
 Contributions are welcome. Feel free to open issues, feature requests, or start a discussion.
-
 
 **Happy Vibe Coding!**

@@ -7,6 +7,7 @@ project:
   router: tanstack-router
   language: typescript
   packageManager: npm
+  scriptRuntime: bun
   formatting: biome
   styling: tailwind-css-v4
   componentLibrary: shadcn-ui
@@ -49,6 +50,36 @@ commands:
   validateArchitecture: npm run validate:architecture
   validateNavigation: npm run validate:navigation
   validate: npm run validate
+
+tooling:
+  packageManager: npm
+  scriptRuntime: bun
+
+scaffolding:
+  feature:
+    command: npm run generate:feature --
+    arguments:
+      name:
+        required: true
+        format: kebab-case
+      nav:
+        required: false
+        type: boolean
+  dashboard:
+    command: npm run generate:dashboard --
+    arguments:
+      name:
+        required: true
+        format: kebab-case
+  crud:
+    command: npm run generate:crud --
+    arguments:
+      plural:
+        required: true
+        format: kebab-case
+      singular:
+        required: false
+        format: kebab-case
 
 invariants:
   - route.tsx remains SSR-safe by default

@@ -12,7 +12,9 @@
 - TanStack Table for advanced tables.
 - Zustand for genuinely shared client state.
 - Biome for formatting, linting, and import organization.
-- npm and `ts-node` for repository scripts.
+- npm as the package manager and Bun as the script/tooling runtime: `npm install`
+  manages application dependencies, while `npm run generate:*`, `ai:context`, and
+  `validate:*` scripts invoke TypeScript tooling internally through Bun.
 
 Installed framework documentation and local component source are authoritative.
 Before framework or routing changes, consult the current official documentation:

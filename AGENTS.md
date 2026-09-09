@@ -165,13 +165,20 @@ Before shadcn/ui work, inspect `components.json` and the relevant local source u
 
 ### Scaffolding commands
 
-Do not invent route structures repeatedly. Use the repository generators:
+Prefer repository generators over manually creating standard feature, dashboard, or CRUD structures. Inspect the generated files and then implement business behavior. Only create those structures manually when the existing generator cannot represent the requested shape.
 
 ```bash
 npm run generate:feature -- <name>
+npm run generate:feature -- <name> --nav
+
 npm run generate:dashboard -- <name>
+
 npm run generate:crud -- <plural-entity>
+npm run generate:crud -- <plural-entity> --singular <singular-entity>
 ```
+
+- `--nav` registers the feature in the sidebar navigation when appropriate.
+- `--singular` explicitly sets the singular name of a CRUD entity.
 
 Inspect generated files before implementation. Modify the scaffold to satisfy the approved
 product behavior, not to introduce speculative abstractions. Generated routes use the

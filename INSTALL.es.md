@@ -27,6 +27,8 @@ configuración de scripts ya está ampliada en `tsconfig.scripts.json`.
 
 ## 2. Scripts y configuración
 
+**Contrato de tooling:** npm es el package manager (`npm install` gestiona las dependencias de la aplicación); Bun es el runtime de los scripts internos de scaffolding/tooling (`generate:*`, `ai:context`, `validate:*` invocan TypeScript a través de Bun).
+
 Los scripts de `package.json` ya incluyen los generadores y validadores:
 
 - `generate:project`, `generate:feature`, `generate:crud`, `generate:dashboard`
@@ -63,11 +65,15 @@ Con todos los ejemplos:
 npm run generate:project -- inventory-admin
 ```
 
-Base mínima con un solo dashboard canónico:
+Base mínima con un solo dashboard canónico. Desde un clon limpio, la ruta recomendada es con `--install`, porque instala las dependencias del destino para que el CLI de TanStack Router pueda regenerar `src/routeTree.gen.ts`:
 
 ```bash
-npm run generate:project -- inventory-admin --profile minimal
+npm run generate:project -- inventory-admin --profile minimal --install
 ```
+
+Sin un CLI disponible (ni en el destino ni en el boilerplate fuente), el perfil `minimal` falla explícitamente en lugar de entregar un route tree obsoleto.
+
+El proyecto derivado conserva los generadores de feature, dashboard y CRUD, los validadores y el tooling de AI context para que Gentle AI pueda evolucionarlo. No conserva `generate:project` (ni `scripts/create-project.ts`, ni `templates/project/`, ni `phase1:self-test`): un proyecto derivado no puede generar otro proyecto.
 
 Por defecto se crea como directorio hermano del boilerplate. Puedes indicar otra ruta:
 
