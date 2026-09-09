@@ -1,0 +1,25 @@
+{
+  "removeDashboardDirectories": [
+    "(legacy)",
+    "academy",
+    "analytics",
+    "calendar",
+    "chat",
+    "coming-soon",
+    "crm",
+    "ecommerce",
+    "file-manager",
+    "finance",
+    "infrastructure",
+    "invoice",
+    "kanban",
+    "logistics",
+    "mail",
+    "patient-monitoring",
+    "productivity",
+    "profile",
+    "roles",
+    "tasks",
+    "users"
+  ]
+}
