@@ -19,9 +19,7 @@ function {{PASCAL_PLURAL}}Page() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h1 className="font-semibold text-2xl tracking-tight">{{TITLE_PLURAL}}</h1>
-          <p className="text-muted-foreground">
-            {{DESCRIPTION}}
-          </p>
+          <p className="text-muted-foreground">{{DESCRIPTION}}</p>
         </div>
         <Button nativeButton={false} render={<Link to="/dashboard/{{ROUTE_NAME}}/new" />}>
           Create {{TITLE_SINGULAR}}

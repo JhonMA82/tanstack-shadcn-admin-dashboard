@@ -286,6 +286,25 @@ async function main(): Promise<void> {
       throw new Error("CRUD with explicit singular did not use inventory-item / inventory-items correctly.");
     }
 
+    // CRUD descriptions must render biome-clean: a short description stays
+    // on a single line so `npm run check` passes in derived projects.
+    await createCrud({
+      repositoryRoot: fixtureRoot,
+      routeName: "work-orders",
+      singularName: "work-order",
+      description: "Track work orders end to end.",
+      navigation: false,
+      refreshContext: false,
+    });
+    const workOrdersIndex = await readFile(
+      path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "work-orders", "route.tsx"),
+      "utf8",
+    );
+    const expectedParagraph = `<p className="text-muted-foreground">Track work orders end to end.</p>`;
+    if (!workOrdersIndex.includes(expectedParagraph)) {
+      throw new Error("CRUD --description did not render as a single-line paragraph.");
+    }
+
     const fixtureSidebar = await readFile(
       path.join(fixtureRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
       "utf8",
