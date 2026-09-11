@@ -39,7 +39,17 @@ export interface CreateProjectOptions {
   installDependencies?: boolean;
 }
 
-const COPY_EXCLUSIONS = new Set([".git", ".next", "node_modules", "coverage", "dist", ".turbo", ".DS_Store"]);
+const COPY_EXCLUSIONS = new Set([
+  ".git",
+  ".next",
+  "node_modules",
+  "coverage",
+  "dist",
+  ".turbo",
+  ".DS_Store",
+  ".codegraph",
+  ".atl",
+]);
 
 async function copyRepository(sourceRoot: string, destination: string): Promise<void> {
   await cp(sourceRoot, destination, {
@@ -239,6 +249,10 @@ const DERIVED_SOURCE_ONLY_FILES = [
   "PROJECT.template.md",
 ];
 
+// Release-readiness handoff documents (PI_*.md) are source-only working
+// artifacts and must never leak into derived applications.
+const DERIVED_SOURCE_ONLY_FILE_PATTERN = /^PI_.*\.md$/;
+
 const DERIVED_SOURCE_ONLY_SCRIPTS = ["generate:project", "phase1:self-test"];
 
 async function removeDerivedProjectMapCapability(destination: string): Promise<void> {
@@ -261,6 +275,13 @@ async function removeDerivedProjectMapCapability(destination: string): Promise<v
 async function applyDerivedProjectCleanup(destination: string): Promise<void> {
   for (const relative of DERIVED_SOURCE_ONLY_FILES) {
     await rm(path.join(destination, relative), { recursive: true, force: true });
+  }
+
+  const { readdir } = await import("node:fs/promises");
+  for (const entry of await readdir(destination)) {
+    if (DERIVED_SOURCE_ONLY_FILE_PATTERN.test(entry)) {
+      await rm(path.join(destination, entry), { recursive: true, force: true });
+    }
   }
 
   // Source-only package.json scripts are dropped by updatePackageIdentity with

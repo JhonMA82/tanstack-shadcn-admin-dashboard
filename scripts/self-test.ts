@@ -1,5 +1,5 @@
 import { pathExists, readJson } from "./_lib/files.js";
-import { resolveTsrBinary } from "./_lib/routes.js";
+import { resolveTsrBinary, scanRoutes } from "./_lib/routes.js";
 import { createCrud } from "./create-crud.js";
 import { createDashboard } from "./create-dashboard.js";
 import { createFeature } from "./create-feature.js";
@@ -92,6 +92,10 @@ async function writeFixture(repositoryRoot: string, fixtureRoot: string): Promis
   );
 
   await fixtureWrite(path.join(fixtureRoot, "PROJECT.md"), "# Fixture\n\nConfigured project contract.\n");
+  await fixtureWrite(
+    path.join(fixtureRoot, "PI_FIXTURE_READINESS.md"),
+    "# Fixture readiness handoff (source-only, must not leak to derived projects).\n",
+  );
 
   const defaultRoute = path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "default");
   await cp(path.join(repositoryRoot, "templates", "feature"), path.join(fixtureRoot, ".fixture-template-copy"), {
@@ -290,6 +294,74 @@ async function main(): Promise<void> {
       throw new Error("Feature with --nav did not register a navigation entry for reports.");
     }
 
+    // Navigation mutation matrix: defaults stay out, opt-outs stay out, custom
+    // group/icon/title land verbatim, and repeated scaffolds are idempotent.
+    await createFeature({
+      repositoryRoot: fixtureRoot,
+      name: "plain-widget",
+      refreshContext: false,
+    });
+    await createDashboard({
+      repositoryRoot: fixtureRoot,
+      name: "hidden-ops",
+      navigation: false,
+      refreshContext: false,
+    });
+    await createCrud({
+      repositoryRoot: fixtureRoot,
+      routeName: "suppliers",
+      navigation: false,
+      refreshContext: false,
+    });
+    await createFeature({
+      repositoryRoot: fixtureRoot,
+      name: "exec-summary",
+      navigation: true,
+      navigationGroup: "Dashboards",
+      navigationIcon: "LayoutDashboard",
+      navigationTitle: "Exec Summary",
+      refreshContext: false,
+    });
+    await createDashboard({
+      repositoryRoot: fixtureRoot,
+      name: "reports",
+      navigation: true,
+      navigationTitle: "Reports Overview",
+      force: true,
+      refreshContext: false,
+    });
+    const matrixSidebar = await readFile(
+      path.join(fixtureRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
+      "utf8",
+    );
+    for (const absent of ["/dashboard/plain-widget", "/dashboard/hidden-ops", "/dashboard/suppliers"]) {
+      if (matrixSidebar.includes(absent)) {
+        throw new Error(`Navigation matrix leaked an unexpected entry: ${absent}.`);
+      }
+    }
+    if (!matrixSidebar.includes("Exec Summary") || !matrixSidebar.includes("LayoutDashboard")) {
+      throw new Error("Feature with custom nav group/icon/title did not land verbatim.");
+    }
+    const reportsEntries = matrixSidebar.match(/\/dashboard\/reports/g) ?? [];
+    if (reportsEntries.length !== 1) {
+      throw new Error(`Repeated scaffolding duplicated the reports navigation entry (${reportsEntries.length}).`);
+    }
+    // Duplicate generation without --force must fail instead of overwriting.
+    let duplicateFailed = false;
+    try {
+      await createFeature({
+        repositoryRoot: fixtureRoot,
+        name: "reports",
+        navigation: true,
+        refreshContext: false,
+      });
+    } catch {
+      duplicateFailed = true;
+    }
+    if (!duplicateFailed) {
+      throw new Error("Duplicate generation without --force must fail instead of overwriting.");
+    }
+
     await generateAiContext({ repositoryRoot: fixtureRoot });
 
     const architecture = await validateArchitecture(fixtureRoot);
@@ -346,6 +418,7 @@ async function main(): Promise<void> {
       path.join(derivedRoot, "scripts", "create-project.ts"),
       path.join(derivedRoot, "scripts", "self-test.ts"),
       path.join(derivedRoot, "templates", "project"),
+      path.join(derivedRoot, "PI_FIXTURE_READINESS.md"),
     ]) {
       await assertMissing(sourceOnly);
     }
@@ -436,6 +509,21 @@ async function main(): Promise<void> {
       throw new Error("Minimal profile did not regenerate the route tree.");
     }
 
+    // Prove the regenerated route set matches the filesystem: removed demo
+    // routes are gone, scaffolded routes are present. (The stub CLI only
+    // records its invocation; real CLI output is verified in matrix C.)
+    const minimalRoutes = await scanRoutes(path.join(minimalRoot, "src", "routes"));
+    for (const removed of ["/dashboard/crm", "/chat", "/mail"]) {
+      if (minimalRoutes.includes(removed)) {
+        throw new Error(`Minimal profile kept a removed demo route: ${removed}.`);
+      }
+    }
+    for (const expected of ["/dashboard/default", "/dashboard/reports"]) {
+      if (!minimalRoutes.includes(expected)) {
+        throw new Error(`Minimal profile lost an expected route: ${expected}.`);
+      }
+    }
+
     const noCliSource = path.join(temporaryRoot, "boilerplate-no-cli");
     await writeFixture(repositoryRoot, noCliSource);
     await seedMinimalFixture(noCliSource, { withTsr: false });
@@ -522,12 +610,15 @@ async function main(): Promise<void> {
     console.log("Phase 1 self-test passed.");
     console.log("- Feature generator: passed");
     console.log("- Feature generator with --nav: passed");
+    console.log("- Navigation matrix (defaults, opt-outs, custom, idempotent, duplicate): passed");
     console.log("- Dashboard generator: passed");
     console.log("- CRUD generator: passed");
     console.log("- CRUD generator with --singular: passed");
     console.log("- Project generator: passed");
     console.log("- Derived scaffolding contract: passed");
+    console.log("- Derived source-only artifacts removed (incl. PI_*.md): passed");
     console.log("- Minimal route tree (source CLI): passed");
+    console.log("- Minimal route set matches filesystem: passed");
     console.log("- Minimal route tree (destination CLI): passed");
     console.log("- Minimal without CLI fails explicitly: passed");
     console.log("- Feature --nav creates missing group: passed");

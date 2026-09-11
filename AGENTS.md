@@ -165,20 +165,22 @@ Before shadcn/ui work, inspect `components.json` and the relevant local source u
 
 ### Scaffolding commands
 
-Prefer repository generators over manually creating standard feature, dashboard, or CRUD structures. Inspect the generated files and then implement business behavior. Only create those structures manually when the existing generator cannot represent the requested shape.
+Prefer repository generators over manually creating standard feature, dashboard, or CRUD structures. The machine-readable contract in `docs/ai/project-map.yaml` (`scaffolding:`) is authoritative for arguments and CLI flags — consult it before inventing route structures. Inspect the generated files and then implement business behavior. Only create those structures manually when the existing generator cannot represent the requested shape.
 
 ```bash
-npm run generate:feature -- <name>
+npm run generate:feature -- <name>              # navigation opt-in via --nav
 npm run generate:feature -- <name> --nav
 
-npm run generate:dashboard -- <name>
+npm run generate:dashboard -- <name>            # navigation on by default, --no-nav disables
 
-npm run generate:crud -- <plural-entity>
+npm run generate:crud -- <plural-entity>        # navigation on by default, --no-nav disables
 npm run generate:crud -- <plural-entity> --singular <singular-entity>
 ```
 
 - `--nav` registers the feature in the sidebar navigation when appropriate.
 - `--singular` explicitly sets the singular name of a CRUD entity.
+- Route tree regeneration (`src/routeTree.gen.ts`) is automatic and mandatory — never edit that file manually.
+- Tooling: **npm** is the package manager, **Bun** runs the generator/validator scripts (`generate:*`, `ai:context`, `validate:*`). Both are required.
 
 Inspect generated files before implementation. Modify the scaffold to satisfy the approved
 product behavior, not to introduce speculative abstractions. Generated routes use the
