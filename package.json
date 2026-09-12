@@ -1,6 +1,6 @@
 {
   "name": "tanstack-shadcn-admin-dashboard",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "imports": {
@@ -26,6 +26,8 @@
     "validate:architecture": "bun scripts/validate-architecture.ts",
     "validate:navigation": "bun scripts/validate-navigation.ts",
     "phase1:self-test": "bun scripts/self-test.ts",
+    "self-test": "bun scripts/self-test.ts",
+    "test:integration": "bun scripts/integration-test.ts",
     "typecheck": "tsc --noEmit",
     "validate": "npm run check && npm run typecheck && npm run validate:architecture && npm run validate:navigation && npm run ai:context:check && npm run build"
   },

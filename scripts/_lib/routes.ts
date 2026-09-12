@@ -58,6 +58,12 @@ export function routeFileToRoute(routesRoot: string, routeFile: string): string 
   const fileName = parts[parts.length - 1];
   const directoryParts = parts.slice(0, -1);
 
+  // Private segments (`-components`, `-lib`, ...) are never addressable.
+  // This check runs first so it applies to every route file type.
+  if (directoryParts.some((segment) => isPrivateSegment(segment))) {
+    return null;
+  }
+
   if (fileName === "$.tsx") {
     const segments = directoryParts.map(routeSegment).filter((segment): segment is string => Boolean(segment));
     return `/${[...segments, "*"].join("/")}`;
@@ -73,10 +79,6 @@ export function routeFileToRoute(routesRoot: string, routeFile: string): string 
   }
 
   if (!isRouteFileName(fileName)) {
-    return null;
-  }
-
-  if ([...directoryParts, ...directoryParts].some((segment) => isPrivateSegment(segment))) {
     return null;
   }
 
@@ -191,33 +193,31 @@ export async function resolveTsrBinary(repositoryRoot: string, destination: stri
 }
 
 /**
- * Regenerate `src/routeTree.gen.ts` after scaffolding new routes. Lenient by
- * design: fixtures and clean checkouts without installed dependencies skip
- * with guidance instead of failing the generator.
+ * Regenerate `src/routeTree.gen.ts` after scaffolding new routes. Fatal by
+ * design: a skipped or failed regeneration would leave a stale
+ * routeTree.gen.ts while the generator reports success.
  */
-export async function regenerateRouteTree(repositoryRoot: string): Promise<boolean> {
+export async function regenerateRouteTree(repositoryRoot: string): Promise<void> {
   const tsrBinary = await resolveTsrBinary(repositoryRoot, repositoryRoot);
 
   if (!tsrBinary) {
-    console.warn(
-      "TanStack Router CLI not found; skipping route tree regeneration." +
-        " Run `npm run generate-routes` after installing dependencies.",
+    throw new Error(
+      "Unable to regenerate the TanStack Router route tree: the TanStack Router CLI (tsr) was not found. " +
+        "Install dependencies and run `npm run generate-routes`.",
     );
-    return false;
   }
 
   const result = spawnSync(tsrBinary, ["generate"], { cwd: repositoryRoot, encoding: "utf8" });
 
   if (result.status !== 0) {
-    console.warn("Route tree regeneration failed; run `npm run generate-routes` manually.");
-    if (typeof result.stderr === "string" && result.stderr.trim()) {
-      console.warn(result.stderr.trim());
-    }
-    return false;
+    const details = typeof result.stderr === "string" && result.stderr.trim() ? `: ${result.stderr.trim()}` : ".";
+    throw new Error(
+      `Unable to regenerate the TanStack Router route tree${details} Fix the route tree with ` +
+        "`npm run generate-routes` after installing dependencies.",
+    );
   }
 
   console.log("Regenerated src/routeTree.gen.ts.");
-  return true;
 }
 
 export function extractNavigationUrls(source: string): string[] {

@@ -51,6 +51,7 @@ Start boilerplate. All generator templates use the `route.tsx` form with `create
 - `scripts/validate-architecture.ts`
 - `scripts/validate-navigation.ts`
 - `scripts/self-test.ts`
+- `scripts/integration-test.ts`
 - `scripts/_lib/**`
 
 ## Templates

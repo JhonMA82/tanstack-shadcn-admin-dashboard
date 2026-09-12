@@ -1,6 +1,8 @@
 import { pathExists } from "./files.js";
+import { jsString } from "./templates.js";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 interface NavigationItemInput {
   id: string;
@@ -8,6 +10,48 @@ interface NavigationItemInput {
   url: string;
   icon: string;
   group: string;
+}
+
+const NAVIGATION_ICON_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
+
+/**
+ * Validate a lucide-react icon reference before it is emitted as code.
+ * Lucide exports are PascalCase component names; anything else would
+ * produce uncompilable or misleading sidebar code.
+ */
+export function assertNavigationIconFormat(icon: string): void {
+  if (!NAVIGATION_ICON_PATTERN.test(icon)) {
+    throw new Error(
+      `Invalid lucide-react icon "${icon}": expected a PascalCase Lucide export name (for example LayoutDashboard).`,
+    );
+  }
+}
+
+/**
+ * When lucide-react is installed in the repository, verify the export
+ * exists so generators fail early instead of emitting dead imports.
+ * Repositories without an installed lucide-react (fixtures) only get the
+ * format check above.
+ */
+export async function assertNavigationIconExists(repositoryRoot: string, icon: string): Promise<void> {
+  const packageRoot = path.join(repositoryRoot, "node_modules", "lucide-react");
+  if (!(await pathExists(packageRoot))) {
+    return;
+  }
+
+  let moduleExports: Record<string, unknown>;
+  try {
+    moduleExports = (await import(pathToFileURL(packageRoot).href)) as Record<string, unknown>;
+  } catch (error) {
+    throw new Error(
+      `Unable to verify lucide-react icon "${icon}": failed to import the installed lucide-react package` +
+        `${error instanceof Error ? `: ${error.message}` : "."}`,
+    );
+  }
+
+  if (!(icon in moduleExports)) {
+    throw new Error(`Unknown lucide-react icon: ${icon}.`);
+  }
 }
 
 function findMatchingBracket(source: string, openIndex: number): number {
@@ -147,7 +191,7 @@ function createNavigationGroup(source: string, group: string): string {
   while (insertAt > arrayStart && /\s/.test(source[insertAt - 1] ?? "")) {
     insertAt -= 1;
   }
-  const entry = ["  {", `    id: ${maxId + 1},`, `    label: "${group}",`, "    items: [],", "  },"].join("\n");
+  const entry = ["  {", `    id: ${maxId + 1},`, `    label: ${jsString(group)},`, "    items: [],", "  },"].join("\n");
   const snippet = insertAt === arrayStart + 1 ? `\n${entry}\n` : `\n${entry}`;
 
   return `${source.slice(0, insertAt)}${snippet}${source.slice(insertAt)}`;
@@ -166,6 +210,9 @@ export async function addNavigationItem(repositoryRoot: string, input: Navigatio
   }
 
   let source = await readFile(navigationPath, "utf8");
+
+  assertNavigationIconFormat(input.icon);
+  await assertNavigationIconExists(repositoryRoot, input.icon);
 
   if (source.includes(`url: "${input.url}"`) || source.includes(`url: '${input.url}'`)) {
     return false;
@@ -197,9 +244,9 @@ export async function addNavigationItem(repositoryRoot: string, input: Navigatio
   const indentation = "      ";
   const entry = [
     `${indentation}{`,
-    `${indentation}  id: "${input.id}",`,
-    `${indentation}  title: "${input.title}",`,
-    `${indentation}  url: "${input.url}" as AppPath,`,
+    `${indentation}  id: ${jsString(input.id)},`,
+    `${indentation}  title: ${jsString(input.title)},`,
+    `${indentation}  url: ${jsString(input.url)} as AppPath,`,
     `${indentation}  icon: ${input.icon},`,
     `${indentation}},`,
   ].join("\n");

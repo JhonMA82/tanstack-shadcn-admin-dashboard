@@ -4,6 +4,30 @@ import path from "node:path";
 
 export type TemplateTokens = Record<string, string>;
 
+/**
+ * Escape a free-text value for use inside a JS/TS string literal. Returns
+ * the complete literal (including surrounding quotes) using JSON semantics,
+ * so quotes, backslashes, and newlines cannot break generated code.
+ */
+export function jsString(value: string): string {
+  return JSON.stringify(value);
+}
+
+/**
+ * Escape a free-text value for use as JSX text children. Braces would open
+ * JSX expressions and `<`/`>` would open tags, so they are entity-encoded.
+ * Quotes, apostrophes, backslashes, and newlines are harmless in JSX text
+ * and pass through unchanged.
+ */
+export function jsxText(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\{/g, "&#123;")
+    .replace(/\}/g, "&#125;");
+}
+
 export function renderTemplate(content: string, tokens: TemplateTokens): string {
   let rendered = content;
 

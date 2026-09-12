@@ -3,7 +3,7 @@ import { ensureRepositoryRoot } from "./_lib/files.js";
 import { assertKebabCase, camelCase, pascalCase, pluralize, singularize, titleCase } from "./_lib/naming.js";
 import { addNavigationItem } from "./_lib/navigation.js";
 import { regenerateRouteTree } from "./_lib/routes.js";
-import { renderTemplateTree } from "./_lib/templates.js";
+import { jsxText, renderTemplateTree } from "./_lib/templates.js";
 import { generateAiContext } from "./generate-ai-context.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -61,7 +61,9 @@ export async function createCrud(options: CreateCrudOptions): Promise<string[]> 
       PASCAL_PLURAL: pascalCase(pluralRoute),
       TITLE_SINGULAR: titleCase(singular),
       TITLE_PLURAL: titleCase(pluralRoute),
-      DESCRIPTION: description,
+      // Free-text description lands in JSX text: entity-escape braces
+      // and angle brackets so it cannot break the generated TSX.
+      DESCRIPTION: jsxText(description),
     },
     force,
   });
