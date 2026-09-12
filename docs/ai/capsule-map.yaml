@@ -2,7 +2,7 @@ schemaVersion: 1
 
 source:
   boilerplate: tanstack-shadcn-admin-dashboard
-  version: 0.3.1
+  version: 0.3.2
   capsulesDir: docs/patterns/canonical
 
 # Resolve at most 2 capsules per task via trigger keywords below.
