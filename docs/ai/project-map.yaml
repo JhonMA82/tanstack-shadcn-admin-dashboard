@@ -5,7 +5,7 @@ project:
   # Upstream baseline this fork was curated from (not this fork's version).
   upstreamVersion: 2.2.0
   # This factory's own release version; mirrors package.json version.
-  factoryVersion: 0.3.0
+  factoryVersion: 0.3.1
   # Generated projects start at 0.1.0 with sourceVersion/sourceCommit recorded
   # in .boilerplate.json and rendered into PROJECT.md (see templates/project).
   framework: tanstack-start

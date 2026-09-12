@@ -25,13 +25,9 @@ Before making framework or routing changes, read the relevant current official d
 
 ## shadcn skill
 
-Use the shadcn skill for all work involving shadcn/ui components, styling, composition, registries, presets, or `components.json`.
+Use the shadcn skill for all work involving shadcn/ui components, styling, composition, registries, presets, or `components.json`, when it is already available in your environment.
 
-If the skill is not available, install it with:
-
-```bash
-npx skills add shadcn/ui
-```
+Never install external tooling to obtain it: opening this repository must not modify your global environment. When the skill is unavailable, work from local sources instead — `components.json`, this repository's docs, and inspection of the local component source under `src/components/ui/`.
 
 The skill contains the component, styling, composition, accessibility, and CLI rules. Do not duplicate those rules here. Always inspect the local component source before using it.
 
@@ -54,11 +50,23 @@ npm run lint
 npm run format
 npm run check
 npm run check:fix
+npm run typecheck
 npm run generate-routes
 npm run generate:presets
+npm run generate:project
+npm run generate:feature
+npm run generate:dashboard
+npm run generate:crud
+npm run ai:context
+npm run ai:context:check
+npm run validate:architecture
+npm run validate:navigation
+npm run phase1:self-test
+npm run test:integration
+npm run validate
 ```
 
-There is currently no automated test command. Run build, lint, check, typecheck, or other validation commands only when the user explicitly requests that validation.
+The app has no unit/integration test suite of its own. Quality gates are mandatory before claiming any modification complete: `npm run validate` (`check`, `typecheck`, `validate:architecture`, `validate:navigation`, `ai:context:check`, `build`), plus `npm run phase1:self-test` for scaffolding changes. The heavy gate `npm run test:integration` performs real derived-project installs; run it when `scripts/` or project generation changes.
 
 ## Co-location-based structure
 
@@ -214,11 +222,13 @@ Implement applicable:
 
 ### Validation
 
-During implementation, run focused checks. Before completion, run:
+During implementation, run focused checks. Before completion, run the mandatory quality gates described in "Setup":
 
 ```bash
 npm run validate
 ```
+
+Add `npm run phase1:self-test` when scaffolding or templates changed, and the heavy gate `npm run test:integration` (real derived-project installs) when `scripts/` or project generation changed.
 
 When repository structure changes, regenerate AI context:
 
