@@ -1,6 +1,7 @@
 schemaVersion: 1
 
 selectionRules:
+  - Resolve capsules via docs/ai/capsule-map.yaml first using trigger keywords.
   - Use the default dashboard for shell, spacing, and theme behavior.
   - Add a canonical example only after it is current, reusable, and verified.
   - Record intentional deviations from the selected example.
@@ -9,11 +10,191 @@ selectionRules:
 examples:
   default-dashboard:
     path: src/routes/(main)/dashboard/default
+    capsule: docs/patterns/canonical/default.md
     useFor:
       - baseline dashboard shell
       - neutral theme composition
       - general overview layout
-    status: current
+    status: capsule
+
+  finance-dashboard:
+    path: src/routes/(main)/dashboard/finance
+    capsule: docs/patterns/canonical/finance.md
+    useFor:
+      - financial KPI hierarchy
+      - dense dashboard composition
+      - chart and metric layout
+    status: capsule
+
+  infrastructure-dashboard:
+    path: src/routes/(main)/dashboard/infrastructure
+    capsule: docs/patterns/canonical/infrastructure.md
+    useFor:
+      - operational status
+      - resource and health presentation
+      - technical metric grouping
+    status: capsule
+
+  crm-dashboard:
+    path: src/routes/(main)/dashboard/crm
+    capsule: docs/patterns/canonical/crm.md
+    useFor:
+      - customer and pipeline hierarchy
+      - business activity composition
+      - CRM-oriented widgets
+    status: capsule
+
+  analytics-dashboard:
+    path: src/routes/(main)/dashboard/analytics
+    capsule: docs/patterns/canonical/analytics.md
+    useFor:
+      - trend visualization
+      - chart-heavy responsive layout
+      - analytics composition
+    status: capsule
+
+  users-management:
+    path: src/routes/(main)/dashboard/users
+    capsule: docs/patterns/canonical/users.md
+    useFor:
+      - entity list
+      - user-management information architecture
+      - table and action composition
+    status: capsule
+
+  roles-management:
+    path: src/routes/(main)/dashboard/roles
+    capsule: docs/patterns/canonical/roles.md
+    useFor:
+      - permissions-oriented UI
+      - role list and actions
+      - access-management composition
+    status: capsule
+
+  academy-dashboard:
+    path: src/routes/(main)/dashboard/academy
+    capsule: docs/patterns/canonical/academy.md
+    useFor:
+      - cohort and class overview
+      - schedule plus performance composition
+      - staff action hierarchy
+    status: capsule
+
+  calendar-screen:
+    path: src/routes/(main)/dashboard/calendar
+    capsule: docs/patterns/canonical/calendar.md
+    useFor:
+      - full scheduling surface
+      - event grid and detail composition
+      - view-switching toolbar
+    status: capsule
+
+  chat-screen:
+    path: src/routes/(main)/chat
+    capsule: docs/patterns/canonical/chat.md
+    useFor:
+      - conversational surface
+      - list plus thread composition
+      - presence and composer patterns
+    status: capsule
+
+  coming-soon-screen:
+    path: src/routes/(main)/dashboard/coming-soon
+    capsule: docs/patterns/canonical/coming-soon.md
+    useFor:
+      - unreleased route placeholder
+      - centered static composition
+    status: capsule
+
+  ecommerce-dashboard:
+    path: src/routes/(main)/dashboard/ecommerce
+    capsule: docs/patterns/canonical/ecommerce.md
+    useFor:
+      - storefront overview
+      - scoped KPI and orders composition
+      - merchandising panels
+    status: capsule
+
+  file-manager-screen:
+    path: src/routes/(main)/dashboard/file-manager
+    capsule: docs/patterns/canonical/file-manager.md
+    useFor:
+      - file and folder library
+      - grid versus list composition
+      - search-param view state
+    status: capsule
+
+  invoice-composer:
+    path: src/routes/(main)/dashboard/invoice
+    capsule: docs/patterns/canonical/invoice.md
+    useFor:
+      - document composer with live preview
+      - form plus paper composition
+      - line-item editing
+    status: capsule
+
+  kanban-board:
+    path: src/routes/(main)/dashboard/kanban
+    capsule: docs/patterns/canonical/kanban.md
+    useFor:
+      - drag-and-drop status board
+      - column and card composition
+      - keyboard-equivalent moves
+    status: capsule
+
+  logistics-tracking:
+    path: src/routes/(main)/dashboard/logistics
+    capsule: docs/patterns/canonical/logistics.md
+    useFor:
+      - shipment tracking
+      - list plus detail plus map composition
+      - exception surfacing
+    status: capsule
+
+  mail-screen:
+    path: src/routes/(main)/mail
+    capsule: docs/patterns/canonical/mail.md
+    useFor:
+      - inbox with reading pane
+      - folder triage composition
+      - persisted layout
+    status: capsule
+
+  patient-monitoring-screen:
+    path: src/routes/(main)/dashboard/patient-monitoring
+    capsule: docs/patterns/canonical/patient-monitoring.md
+    useFor:
+      - realtime telemetry wall
+      - card grid plus detail composition
+      - alarm and disconnect states
+    status: capsule
+
+  productivity-dashboard:
+    path: src/routes/(main)/dashboard/productivity
+    capsule: docs/patterns/canonical/productivity.md
+    useFor:
+      - personal planning workspace
+      - work column plus ritual rail
+      - task and focus composition
+    status: capsule
+
+  profile-record:
+    path: src/routes/(main)/dashboard/profile
+    capsule: docs/patterns/canonical/profile.md
+    useFor:
+      - per-person record
+      - header plus tabbed detail composition
+      - status sidebar pattern
+    status: capsule
+
+  tasks-collection:
+    path: src/routes/(main)/dashboard/tasks
+    capsule: docs/patterns/canonical/tasks.md
+    useFor:
+      - triage queue with faceted filters
+      - toolbar plus table composition
+      - bulk action patterns
+    status: capsule
 
 protectedExamples:
   ui-primitives:

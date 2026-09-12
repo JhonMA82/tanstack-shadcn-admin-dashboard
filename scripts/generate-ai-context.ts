@@ -112,8 +112,17 @@ export async function buildAiContext(repositoryRoot: string): Promise<string> {
   );
   const patterns = relativeList(
     repositoryRoot,
-    await walkFiles(path.join(repositoryRoot, "docs", "patterns"), (file) => file.endsWith(".md")),
+    (await walkFiles(path.join(repositoryRoot, "docs", "patterns"), (file) => file.endsWith(".md"))).filter(
+      (file) => !file.includes(`${path.sep}canonical${path.sep}`),
+    ),
   );
+  const canonicalCapsules = relativeList(
+    repositoryRoot,
+    await walkFiles(path.join(repositoryRoot, "docs", "patterns", "canonical"), (file) => file.endsWith(".md")),
+  );
+  const capsuleMapPath = path.join(repositoryRoot, "docs", "ai", "capsule-map.yaml");
+  const capsuleMapSource = (await pathExists(capsuleMapPath)) ? await readFile(capsuleMapPath, "utf8") : "";
+  const capsuleMapIds = [...capsuleMapSource.matchAll(/-\s*id:\s*(\S+)/g)].map((match) => match[1]);
   const decisions = relativeList(
     repositoryRoot,
     await walkFiles(path.join(repositoryRoot, "docs", "decisions"), (file) => /^\d+.*\.md$/.test(path.basename(file))),
@@ -156,6 +165,8 @@ export async function buildAiContext(repositoryRoot: string): Promise<string> {
     serverModules,
     stores,
     patterns,
+    canonicalCapsules,
+    capsuleMapIds,
     decisions,
     scripts,
     templateFiles,
@@ -237,6 +248,14 @@ ${bulletList(decisions)}
 
 ${bulletList(patterns)}
 
+## Canonical capsules
+
+${bulletList(canonicalCapsules)}
+
+## Capsule map
+
+${bulletList(capsuleMapIds)}
+
 ## Repository scripts
 
 ${bulletList(scripts)}
@@ -252,8 +271,8 @@ For a task, load:
 1. \`PROJECT.md\`.
 2. \`docs/architecture.md\`.
 3. One applicable pattern.
-4. \`docs/ai/canonical-examples.yaml\`.
-5. One or two selected examples.
+4. \`docs/ai/canonical-examples.yaml\` (resolve via \`docs/ai/capsule-map.yaml\` first, max 2 capsules).
+5. One or two selected capsules.
 6. The target route and direct dependencies.
 
 Do not load every route or primitive unless the task requires a repository-wide change.

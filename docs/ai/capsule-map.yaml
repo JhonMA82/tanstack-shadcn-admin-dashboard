@@ -1,0 +1,269 @@
+schemaVersion: 1
+
+source:
+  boilerplate: tanstack-shadcn-admin-dashboard
+  version: 0.2.1
+  capsulesDir: docs/patterns/canonical
+
+# Resolve at most 2 capsules per task via trigger keywords below.
+# Capsules are distilled references; load source only for line-level detail.
+capsules:
+  - id: default-dashboard
+    capsule: docs/patterns/canonical/default.md
+    triggers:
+      - overview
+      - executive
+      - resumen
+      - general
+      - baseline shell
+      - neutral dashboard
+    generator: npm run generate:dashboard -- <name>
+
+  - id: finance-dashboard
+    capsule: docs/patterns/canonical/finance.md
+    triggers:
+      - finance
+      - finanzas
+      - money
+      - balances
+      - transactions
+      - wallet
+      - budget
+      - presupuesto
+
+  - id: infrastructure-dashboard
+    capsule: docs/patterns/canonical/infrastructure.md
+    triggers:
+      - infrastructure
+      - infraestructura
+      - ops
+      - deployments
+      - despliegues
+      - environments
+      - entornos
+      - regions
+      - status page
+
+  - id: crm-dashboard
+    capsule: docs/patterns/canonical/crm.md
+    triggers:
+      - crm
+      - pipeline
+      - funnel
+      - embudo
+      - leads
+      - opportunities
+      - oportunidades
+      - sales
+      - ventas
+
+  - id: analytics-dashboard
+    capsule: docs/patterns/canonical/analytics.md
+    triggers:
+      - analytics
+      - analitica
+      - traffic
+      - trafico
+      - engagement
+      - conversions
+      - conversiones
+      - audience
+      - audiencia
+
+  - id: users-management
+    capsule: docs/patterns/canonical/users.md
+    triggers:
+      - users
+      - usuarios
+      - members
+      - miembros
+      - directory
+      - directorio
+      - invite
+      - invitar
+
+  - id: roles-management
+    capsule: docs/patterns/canonical/roles.md
+    triggers:
+      - roles
+      - permissions
+      - permisos
+      - access control
+      - acceso
+      - rbac
+      - admin
+
+  - id: academy-dashboard
+    capsule: docs/patterns/canonical/academy.md
+    triggers:
+      - academy
+      - academia
+      - school
+      - escuela
+      - class
+      - clase
+      - teacher
+      - cohort
+      - lms
+      - students
+      - estudiantes
+
+  - id: calendar-screen
+    capsule: docs/patterns/canonical/calendar.md
+    triggers:
+      - calendar
+      - calendario
+      - schedule
+      - agenda
+      - booking
+      - reserva
+      - events
+      - eventos
+
+  - id: chat-screen
+    capsule: docs/patterns/canonical/chat.md
+    triggers:
+      - chat
+      - messaging
+      - mensajeria
+      - conversation
+      - conversacion
+      - support chat
+      - thread
+
+  - id: coming-soon-screen
+    capsule: docs/patterns/canonical/coming-soon.md
+    triggers:
+      - coming soon
+      - placeholder
+      - proximamente
+      - stub
+      - unreleased
+
+  - id: ecommerce-dashboard
+    capsule: docs/patterns/canonical/ecommerce.md
+    triggers:
+      - ecommerce
+      - store
+      - tienda
+      - shop
+      - orders
+      - pedidos
+      - products
+      - productos
+      - inventory
+      - inventario
+      - retail
+
+  - id: file-manager-screen
+    capsule: docs/patterns/canonical/file-manager.md
+    triggers:
+      - files
+      - archivos
+      - file manager
+      - documents
+      - documentos
+      - folders
+      - carpetas
+      - upload
+      - assets
+
+  - id: invoice-composer
+    capsule: docs/patterns/canonical/invoice.md
+    triggers:
+      - invoice
+      - factura
+      - quote
+      - quote
+      - receipt
+      - recibo
+      - billing
+      - facturacion
+      - preview
+      - print
+
+  - id: kanban-board
+    capsule: docs/patterns/canonical/kanban.md
+    triggers:
+      - kanban
+      - board
+      - tablero
+      - drag
+      - arrastrar
+      - workflow states
+      - sprint board
+
+  - id: logistics-tracking
+    capsule: docs/patterns/canonical/logistics.md
+    triggers:
+      - logistics
+      - logistica
+      - shipments
+      - envios
+      - tracking
+      - seguimiento
+      - fleet
+      - flota
+      - delivery
+      - deliveries
+
+  - id: mail-screen
+    capsule: docs/patterns/canonical/mail.md
+    triggers:
+      - mail
+      - email
+      - correo
+      - inbox
+      - bandeja
+      - tickets queue
+      - mailbox
+
+  - id: patient-monitoring-screen
+    capsule: docs/patterns/canonical/patient-monitoring.md
+    triggers:
+      - patient
+      - paciente
+      - monitoring
+      - monitoreo
+      - vitals
+      - telemetry
+      - telemetria
+      - clinical
+      - alarm
+
+  - id: productivity-dashboard
+    capsule: docs/patterns/canonical/productivity.md
+    triggers:
+      - productivity
+      - productividad
+      - personal home
+      - daily planning
+      - focus
+      - habits
+      - notes
+      - notas
+      - journal
+
+  - id: profile-record
+    capsule: docs/patterns/canonical/profile.md
+    triggers:
+      - profile
+      - perfil
+      - employee record
+      - member record
+      - person detail
+      - account detail
+      - time off
+      - vacaciones
+
+  - id: tasks-collection
+    capsule: docs/patterns/canonical/tasks.md
+    triggers:
+      - tasks
+      - tareas
+      - tickets
+      - issues
+      - queue
+      - cola
+      - todo
+      - backlog
