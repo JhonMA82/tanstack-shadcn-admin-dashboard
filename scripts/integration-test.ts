@@ -47,10 +47,11 @@ async function npmRun(destination: string, script: string, args: string[] = []):
 }
 
 /**
- * Exercise one derived-project profile end to end: real install, validator
- * gate, persistent generators, and a second validator gate. Uses the real
- * repository root so the destination node_modules provides the real
- * TanStack Router CLI.
+ * Exercise one derived-project profile end to end: real install, full
+ * quality-gate run (typecheck, build, architecture, navigation, generated
+ * context, route tree), persistent generators, and a second full gate run.
+ * Uses the real repository root so the destination node_modules provides
+ * the real TanStack Router CLI.
  */
 async function checkProfile(repositoryRoot: string, profile: ProjectProfile): Promise<void> {
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), `studio-admin-integration-${profile}-`));
@@ -66,16 +67,13 @@ async function checkProfile(repositoryRoot: string, profile: ProjectProfile): Pr
       installDependencies: true,
     });
 
-    await npmRun(destination, "validate:architecture");
-    await npmRun(destination, "validate:navigation");
-    await npmRun(destination, "ai:context:check");
+    await npmRun(destination, "validate");
 
     await npmRun(destination, "generate:feature", ["--", "integration-probe", "--nav"]);
     await npmRun(destination, "generate:dashboard", ["--", "integration-screen"]);
     await npmRun(destination, "generate:crud", ["--", "integration-items", "--singular", "integration-item"]);
 
-    await npmRun(destination, "validate:architecture");
-    await npmRun(destination, "validate:navigation");
+    await npmRun(destination, "validate");
 
     console.log(`Integration profile ${profile}: passed`);
   } finally {

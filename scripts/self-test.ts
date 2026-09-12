@@ -125,6 +125,15 @@ async function writeFixture(repositoryRoot: string, fixtureRoot: string): Promis
     await fixtureWrite(path.join(uiRoot, `${name}.tsx`), `export const ${name} = "${name}";\n`);
   }
 
+  // Biome stub: records format invocations so the self-test can prove
+  // generators format their output when a Biome installation exists.
+  const biomeStubPath = path.join(fixtureRoot, "node_modules", ".bin", "biome");
+  await fixtureWrite(
+    biomeStubPath,
+    ["#!/bin/sh", 'printf \'%s\\n\' "$@" >> "$PWD/biome-invocation.log"', ""].join("\n"),
+  );
+  await chmod(biomeStubPath, 0o755);
+
   await fixtureWrite(
     path.join(fixtureRoot, "src", "navigation", "sidebar", "sidebar-items.ts"),
     `import {
@@ -307,6 +316,13 @@ async function main(): Promise<void> {
     await assertPath(path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "customers", "$id.tsx"));
     await assertPath(path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "inventory-items", "$id.tsx"));
 
+    // Generators must format their output with Biome so derived projects
+    // pass `npm run check` regardless of runtime values.
+    const biomeLog = await readFile(path.join(fixtureRoot, "biome-invocation.log"), "utf8");
+    if (!biomeLog.includes("format")) {
+      throw new Error("Generators did not run Biome formatting on generated files.");
+    }
+
     const inventoryIndex = await readFile(
       path.join(fixtureRoot, "src", "routes", "(main)", "dashboard", "inventory-items", "route.tsx"),
       "utf8",
@@ -460,7 +476,7 @@ async function main(): Promise<void> {
       }
     }
 
-    for (const script of ["generate:project", "phase1:self-test"]) {
+    for (const script of ["generate:project", "phase1:self-test", "self-test", "test:integration"]) {
       if (derivedPackage.scripts?.[script]) {
         throw new Error(`Derived project must not keep source-only script: ${script}.`);
       }
@@ -469,6 +485,7 @@ async function main(): Promise<void> {
     for (const sourceOnly of [
       path.join(derivedRoot, "scripts", "create-project.ts"),
       path.join(derivedRoot, "scripts", "self-test.ts"),
+      path.join(derivedRoot, "scripts", "integration-test.ts"),
       path.join(derivedRoot, "templates", "project"),
       path.join(derivedRoot, "PI_FIXTURE_READINESS.md"),
     ]) {

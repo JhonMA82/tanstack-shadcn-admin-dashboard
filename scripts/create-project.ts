@@ -68,7 +68,7 @@ async function copyRepository(sourceRoot: string, destination: string): Promise<
   });
 }
 
-const DERIVED_SOURCE_ONLY_SCRIPT_PATTERN = /^\s*"(generate:project|phase1:self-test)"\s*:/;
+const DERIVED_SOURCE_ONLY_SCRIPT_PATTERN = /^\s*"(generate:project|phase1:self-test|self-test|test:integration)"\s*:/;
 
 async function updatePackageIdentity(destination: string, packageName: string): Promise<{ sourceVersion: string }> {
   const packagePath = path.join(destination, "package.json");
@@ -244,6 +244,7 @@ async function regenerateMinimalRouteTree(repositoryRoot: string, destination: s
 const DERIVED_SOURCE_ONLY_FILES = [
   path.join("scripts", "create-project.ts"),
   path.join("scripts", "self-test.ts"),
+  path.join("scripts", "integration-test.ts"),
   path.join("templates", "project"),
   "INSTALL.es.md",
   "MANIFEST.md",
@@ -254,7 +255,7 @@ const DERIVED_SOURCE_ONLY_FILES = [
 // artifacts and must never leak into derived applications.
 const DERIVED_SOURCE_ONLY_FILE_PATTERN = /^PI_.*\.md$/;
 
-const DERIVED_SOURCE_ONLY_SCRIPTS = ["generate:project", "phase1:self-test"];
+const DERIVED_SOURCE_ONLY_SCRIPTS = ["generate:project", "phase1:self-test", "self-test", "test:integration"];
 
 async function removeDerivedProjectMapCapability(destination: string): Promise<void> {
   const projectMapPath = path.join(destination, "docs", "ai", "project-map.yaml");

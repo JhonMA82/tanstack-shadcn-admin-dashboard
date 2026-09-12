@@ -1,5 +1,6 @@
 import { booleanFlag, parseArgs, printUsage, stringFlag } from "./_lib/cli.js";
 import { ensureRepositoryRoot } from "./_lib/files.js";
+import { formatGeneratedFiles } from "./_lib/format.js";
 import { assertKebabCase, pascalCase, titleCase } from "./_lib/naming.js";
 import { addNavigationItem } from "./_lib/navigation.js";
 import { regenerateRouteTree } from "./_lib/routes.js";
@@ -60,6 +61,14 @@ export async function createFeature(options: CreateFeatureOptions): Promise<stri
       group: navigationGroup,
     });
   }
+
+  // Free-text descriptions can push rendered lines past the Biome print
+  // width. Format generator output so the derived project's `npm run
+  // check` gate stays green without hand-editing scaffolds.
+  await formatGeneratedFiles(repositoryRoot, [
+    ...written,
+    ...(navigation ? [path.join(repositoryRoot, "src", "navigation", "sidebar", "sidebar-items.ts")] : []),
+  ]);
 
   await regenerateRouteTree(repositoryRoot);
 
