@@ -4,6 +4,9 @@ import { initialBoard } from "./-components/data";
 import { Kanban } from "./-components/kanban";
 
 export const Route = createFileRoute("/(main)/dashboard/kanban")({
+  validateSearch: (search: Record<string, unknown>): { view: "board" | "list" | "table" } => ({
+    view: search.view === "list" || search.view === "table" ? search.view : "board",
+  }),
   component: Page,
 });
 

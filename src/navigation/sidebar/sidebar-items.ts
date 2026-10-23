@@ -27,7 +27,7 @@ import {
 
 import type { FileRoutesByTo } from "@/routeTree.gen";
 
-export type NavBadge = "new" | "soon";
+export type NavBadge = "new" | "updated" | "soon";
 export type AppPath = keyof FileRoutesByTo;
 
 export interface NavSubItem {
@@ -173,6 +173,7 @@ export const sidebarItems: NavGroup[] = [
         title: "Kanban",
         url: "/dashboard/kanban",
         icon: Kanban,
+        badge: "updated",
       },
       {
         id: "tasks",
