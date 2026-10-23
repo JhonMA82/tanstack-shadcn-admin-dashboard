@@ -68,7 +68,7 @@ export const opportunitiesColumns: ColumnDef<DataTableFeatures, OpportunityRow>[
   {
     accessorKey: "account",
     header: "Account",
-    cell: ({ row }) => <div className="font-medium text-sm">{row.original.account}</div>,
+    cell: ({ row }) => <div className="text-sm font-medium">{row.original.account}</div>,
   },
   {
     accessorKey: "stage",
@@ -107,7 +107,7 @@ export const opportunitiesColumns: ColumnDef<DataTableFeatures, OpportunityRow>[
   {
     accessorKey: "value",
     header: "Value",
-    cell: ({ row }) => <div className="font-medium text-sm tabular-nums">{row.original.value}</div>,
+    cell: ({ row }) => <div className="text-sm font-medium tabular-nums">{row.original.value}</div>,
   },
   {
     id: "actions",
@@ -117,7 +117,7 @@ export const opportunitiesColumns: ColumnDef<DataTableFeatures, OpportunityRow>[
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 rounded-full text-muted-foreground hover:bg-transparent focus-visible:bg-transparent"
+          className="text-muted-foreground size-8 rounded-full hover:bg-transparent focus-visible:bg-transparent"
         >
           <Pencil />
           <span className="sr-only">Edit opportunity</span>
