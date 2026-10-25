@@ -172,6 +172,11 @@
   }
 }
 
+html {
+  overscroll-behavior-x: auto;
+  overscroll-behavior-y: none;
+}
+
 .disable-transitions * {
   transition: none !important;
 }
