@@ -16,7 +16,7 @@ Most admin templates I found, free or paid, felt cluttered, outdated, or too rig
 > Looking for the Next.js React Aria version? Check out [arhamkhnz/next-shadcn-admin-dashboard-aria](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-aria).
 
 > [!TIP]
-> I’m also working on Nuxt.js and Svelte versions of this dashboard. They’ll be live soon.
+> If you're looking for individual blocks, please refer to [Studio Blocks](https://studio-blocks.arhamkhnz.com/).
 
 ## Features
 
